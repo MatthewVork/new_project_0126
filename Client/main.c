@@ -10,14 +10,14 @@
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 480
 
-// --- 辅助：隐藏所有可能的弹窗 (防止残留) ---
+// --- 辅助：隐藏所有可能的弹窗 ---
 void hide_all_popups() {
     // 1. 登录页面的弹窗
     if(ui_PanelLoginSuccess) lv_obj_add_flag(ui_PanelLoginSuccess, LV_OBJ_FLAG_HIDDEN);
     if(ui_PanelLoginFail)    lv_obj_add_flag(ui_PanelLoginFail, LV_OBJ_FLAG_HIDDEN);
     if(ui_PanelLoginRepeat)  lv_obj_add_flag(ui_PanelLoginRepeat, LV_OBJ_FLAG_HIDDEN);
     
-    // 2. 注册页面的弹窗 (这是这次修复的关键)
+    // 2. 注册页面的弹窗
     if(ui_PanelRegSuccess) lv_obj_add_flag(ui_PanelRegSuccess, LV_OBJ_FLAG_HIDDEN);
     if(ui_PanelRegFail)    lv_obj_add_flag(ui_PanelRegFail, LV_OBJ_FLAG_HIDDEN);
     if(ui_PanelRegRepeat)  lv_obj_add_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
@@ -25,19 +25,27 @@ void hide_all_popups() {
 
 // --- 定时器回调函数 ---
 
-// 1. 注册成功 -> 跳转登录页
+// 1. [注册成功] -> 跳转登录页
 void timer_reg_success_callback(lv_timer_t * timer) {
     hide_all_popups();
-    // 注册成功后，自动跳回登录页让用户登录
     _ui_screen_change(&ui_ScreenLogin, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLogin_screen_init);
-    printf("[System] 注册完成，自动跳转登录页\n");
+    printf("[System] 注册完成，跳转登录页\n");
 }
 
-// 2. 注册/登录失败 -> 仅关闭弹窗
+// 2. [登录成功] -> 跳转大厅 (新增)
+void timer_login_success_callback(lv_timer_t * timer) {
+    hide_all_popups();
+    // 跳转到大厅
+    _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLobby_screen_init);
+    printf("[System] 登录完成，进入游戏大厅\n");
+}
+
+// 3. [失败/通用] -> 仅关闭弹窗
 void timer_close_popup_callback(lv_timer_t * timer) {
-    hide_all_popups(); // 简单粗暴，关掉所有弹窗
+    hide_all_popups(); 
     printf("[System] 自动关闭提示框\n");
 }
+
 
 int main(void)
 {
@@ -83,6 +91,7 @@ int main(void)
 
     // --- 5. 网络初始化 ---
     printf("正在连接服务器...\n");
+    // ⚠️ 局域网请改IP
     if (net_init("127.0.0.1", 8888) != 0) {
         printf("连接服务器失败，程序退出。\n");
         return -1;
@@ -94,12 +103,11 @@ int main(void)
         lv_timer_handler();
 
         uint8_t buffer[1024];
-        int len = net_poll(buffer); // 轮询网络消息
+        int len = net_poll(buffer);
 
         if (len > 0) {
             uint8_t cmd = buffer[0];
             
-            // === 处理 注册/登录 结果 ===
             if (cmd == CMD_AUTH_RESULT) {
                 ResultPacket* res = (ResultPacket*)buffer;
                 
@@ -107,27 +115,24 @@ int main(void)
                 // 场景 A: 当前在 [注册页]
                 // ---------------------------------------------------------
                 if (lv_scr_act() == ui_ScreenRegister) {
-                    hide_all_popups(); // 清理旧弹窗
+                    hide_all_popups(); 
 
                     if (res->success) {
-                        printf("[UI-Reg] 注册成功 -> 显示Reg弹窗\n");
-                        // 1. 显示注册成功的弹窗 (注意是用 PanelRegSuccess)
+                        printf("[UI-Reg] 注册成功\n");
+                        // 显示注册成功弹窗
                         if(ui_PanelRegSuccess) lv_obj_clear_flag(ui_PanelRegSuccess, LV_OBJ_FLAG_HIDDEN);
                         
-                        // 2. 1.5秒后跳转回登录页
+                        // 1.5秒后跳回登录页
                         lv_timer_t * t = lv_timer_create(timer_reg_success_callback, 1500, NULL);
                         lv_timer_set_repeat_count(t, 1);
                     } 
                     else {
                         // 注册失败
                         if (strstr(res->message, "Exist") != NULL || strstr(res->message, "Repeat") != NULL) {
-                            printf("[UI-Reg] 用户名已存在\n");
                             if(ui_PanelRegRepeat) lv_obj_clear_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
                         } else {
-                            printf("[UI-Reg] 注册通用失败: %s\n", res->message);
                             if(ui_PanelRegFail) lv_obj_clear_flag(ui_PanelRegFail, LV_OBJ_FLAG_HIDDEN);
                         }
-                        // 1.5秒后自动关闭提示
                         lv_timer_t * t = lv_timer_create(timer_close_popup_callback, 1500, NULL);
                         lv_timer_set_repeat_count(t, 1);
                     }
@@ -140,22 +145,26 @@ int main(void)
                     hide_all_popups();
 
                     if (res->success) {
-                        printf("[UI-Login] 登录成功 -> 进入大厅\n");
+                        printf("[UI-Login] 登录成功 -> 显示弹窗\n");
                         
-                        // 【关键】跳转到大厅 (你之前这里是注释掉的，现在解开了)
-                        _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLobby_screen_init);
+                        // 1. 显示登录成功弹窗 (以前是直接跳转，现在这里改了)
+                        if(ui_PanelLoginSuccess) {
+                            lv_obj_clear_flag(ui_PanelLoginSuccess, LV_OBJ_FLAG_HIDDEN);
+                        }
+                        
+                        // 2. 1.5秒后执行 timer_login_success_callback 跳转大厅
+                        lv_timer_t * t = lv_timer_create(timer_login_success_callback, 1500, NULL);
+                        lv_timer_set_repeat_count(t, 1);
                         
                     } 
                     else {
                         // 登录失败
+                        printf("[UI-Login] 登录失败: %s\n", res->message);
                         if (strstr(res->message, "Repeat") != NULL || strstr(res->message, "already") != NULL) {
-                            printf("[UI-Login] 重复登录\n");
                             if(ui_PanelLoginRepeat) lv_obj_clear_flag(ui_PanelLoginRepeat, LV_OBJ_FLAG_HIDDEN);
                         } else {
-                            printf("[UI-Login] 密码错误或用户不存在\n");
                             if(ui_PanelLoginFail) lv_obj_clear_flag(ui_PanelLoginFail, LV_OBJ_FLAG_HIDDEN);
                         }
-                        // 1.5秒后自动关闭提示
                         lv_timer_t * t = lv_timer_create(timer_close_popup_callback, 1500, NULL);
                         lv_timer_set_repeat_count(t, 1);
                     }
