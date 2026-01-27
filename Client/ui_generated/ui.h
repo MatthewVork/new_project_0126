@@ -88,6 +88,30 @@ extern lv_obj_t * ui_Label8;
 void ui_event_BtnCreateRoom(lv_event_t * e);
 extern lv_obj_t * ui_BtnCreateRoom;
 extern lv_obj_t * ui_awdwad;
+// SCREEN: ui_ScreenGame
+void ui_ScreenGame_screen_init(void);
+extern lv_obj_t * ui_ScreenGame;
+extern lv_obj_t * ui_LabelGameInfo;
+extern lv_obj_t * ui_PanelBoard;
+void ui_event_BtnExitGame(lv_event_t * e);
+extern lv_obj_t * ui_BtnExitGame;
+extern lv_obj_t * ui_Label16;
+// SCREEN: ui_ScreenRoom
+void ui_ScreenRoom_screen_init(void);
+extern lv_obj_t * ui_ScreenRoom;
+extern lv_obj_t * ui_LabelRoomTitle;
+extern lv_obj_t * ui_PanelP1;
+extern lv_obj_t * ui_LabelP1Name;
+extern lv_obj_t * ui_LabelP1Status;
+extern lv_obj_t * ui_PanelP2;
+extern lv_obj_t * ui_LabelP2Name;
+extern lv_obj_t * ui_LabelP2Status;
+void ui_event_BtnReady(lv_event_t * e);
+extern lv_obj_t * ui_BtnReady;
+extern lv_obj_t * ui_Label15;
+void ui_event_BtnLeave(lv_event_t * e);
+extern lv_obj_t * ui_BtnLeave;
+extern lv_obj_t * ui_Label18;
 extern lv_obj_t * ui____initial_actions0;
 
 
