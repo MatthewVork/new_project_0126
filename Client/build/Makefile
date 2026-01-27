@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client
+CMAKE_SOURCE_DIR = /mnt/c/Users/Matthew/Desktop/project_0126/Client
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/build
+CMAKE_BINARY_DIR = /mnt/c/Users/Matthew/Desktop/project_0126/Client/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/build/CMakeFiles /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/Matthew/Desktop/project_0126/Client/build/CMakeFiles /mnt/c/Users/Matthew/Desktop/project_0126/Client/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/Matthew/Desktop/project_0126/Client/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -4953,6 +4953,30 @@ ui_generated/screens/ui_ScreenLogin.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLogin.c.s
 .PHONY : ui_generated/screens/ui_ScreenLogin.c.s
 
+ui_generated/screens/ui_ScreenRegister.o: ui_generated/screens/ui_ScreenRegister.c.o
+.PHONY : ui_generated/screens/ui_ScreenRegister.o
+
+# target to build an object file
+ui_generated/screens/ui_ScreenRegister.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenRegister.c.o
+.PHONY : ui_generated/screens/ui_ScreenRegister.c.o
+
+ui_generated/screens/ui_ScreenRegister.i: ui_generated/screens/ui_ScreenRegister.c.i
+.PHONY : ui_generated/screens/ui_ScreenRegister.i
+
+# target to preprocess a source file
+ui_generated/screens/ui_ScreenRegister.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenRegister.c.i
+.PHONY : ui_generated/screens/ui_ScreenRegister.c.i
+
+ui_generated/screens/ui_ScreenRegister.s: ui_generated/screens/ui_ScreenRegister.c.s
+.PHONY : ui_generated/screens/ui_ScreenRegister.s
+
+# target to generate assembly for a file
+ui_generated/screens/ui_ScreenRegister.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenRegister.c.s
+.PHONY : ui_generated/screens/ui_ScreenRegister.c.s
+
 ui_generated/ui.o: ui_generated/ui.c.o
 .PHONY : ui_generated/ui.o
 
@@ -5637,6 +5661,9 @@ help:
 	@echo "... ui_generated/screens/ui_ScreenLogin.o"
 	@echo "... ui_generated/screens/ui_ScreenLogin.i"
 	@echo "... ui_generated/screens/ui_ScreenLogin.s"
+	@echo "... ui_generated/screens/ui_ScreenRegister.o"
+	@echo "... ui_generated/screens/ui_ScreenRegister.i"
+	@echo "... ui_generated/screens/ui_ScreenRegister.s"
 	@echo "... ui_generated/ui.o"
 	@echo "... ui_generated/ui.i"
 	@echo "... ui_generated/ui.s"

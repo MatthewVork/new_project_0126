@@ -1,5 +1,5 @@
 screens/ui_ScreenLogin.c
-screens/ui_ScreenLogin1.c
+screens/ui_ScreenRegister.c
 ui.c
 components/ui_comp_hook.c
 ui_helpers.c

@@ -64,25 +64,33 @@ void ui_ScreenLogin_screen_init(void)
     lv_obj_set_align(ui_Label1, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label1, "Login");
 
-    ui_BtnRegister = lv_btn_create(ui_PanelLogin);
-    lv_obj_set_width(ui_BtnRegister, 150);
-    lv_obj_set_height(ui_BtnRegister, 40);
-    lv_obj_set_x(ui_BtnRegister, 0);
-    lv_obj_set_y(ui_BtnRegister, 110);
-    lv_obj_set_align(ui_BtnRegister, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_BtnRegister, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_BtnRegister, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    ui_BtnToRegister1 = lv_btn_create(ui_PanelLogin);
+    lv_obj_set_width(ui_BtnToRegister1, 150);
+    lv_obj_set_height(ui_BtnToRegister1, 40);
+    lv_obj_set_x(ui_BtnToRegister1, 0);
+    lv_obj_set_y(ui_BtnToRegister1, 110);
+    lv_obj_set_align(ui_BtnToRegister1, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_BtnToRegister1, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_BtnToRegister1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Label3 = lv_label_create(ui_BtnRegister);
+    ui_Label3 = lv_label_create(ui_BtnToRegister1);
     lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label3, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label3, "Register");
+    lv_label_set_text(ui_Label3, "Go Register");
+
+    ui_Label2 = lv_label_create(ui_PanelLogin);
+    lv_obj_set_width(ui_Label2, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label2, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label2, 0);
+    lv_obj_set_y(ui_Label2, 30);
+    lv_obj_set_align(ui_Label2, LV_ALIGN_TOP_MID);
+    lv_label_set_text(ui_Label2, "welcome chess match system");
 
     lv_obj_add_event_cb(ui_InputUser, ui_event_InputUser, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_InputPass, ui_event_InputPass, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BtnLogin, ui_event_BtnLogin, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_BtnRegister, ui_event_BtnRegister, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_BtnToRegister1, ui_event_BtnToRegister1, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ScreenLogin, ui_event_ScreenLogin, LV_EVENT_ALL, NULL);
 
 }

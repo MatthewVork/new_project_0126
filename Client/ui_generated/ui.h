@@ -28,22 +28,30 @@ extern lv_obj_t * ui_InputPass;
 void ui_event_BtnLogin(lv_event_t * e);
 extern lv_obj_t * ui_BtnLogin;
 extern lv_obj_t * ui_Label1;
-void ui_event_BtnRegister(lv_event_t * e);
-extern lv_obj_t * ui_BtnRegister;
+void ui_event_BtnToRegister1(lv_event_t * e);
+extern lv_obj_t * ui_BtnToRegister1;
 extern lv_obj_t * ui_Label3;
-// SCREEN: ui_ScreenLogin1
-void ui_ScreenLogin1_screen_init(void);
-void ui_event_ScreenLogin1(lv_event_t * e);
-extern lv_obj_t * ui_ScreenLogin1;
-extern lv_obj_t * ui_KeyboardRes;
-extern lv_obj_t * ui_PanelLogin1;
-void ui_event_InputUser1(lv_event_t * e);
-extern lv_obj_t * ui_InputUser1;
-void ui_event_InputPass1(lv_event_t * e);
-extern lv_obj_t * ui_InputPass1;
-void ui_event_BtnRegister1(lv_event_t * e);
-extern lv_obj_t * ui_BtnRegister1;
+extern lv_obj_t * ui_Label2;
+// SCREEN: ui_ScreenRegister
+void ui_ScreenRegister_screen_init(void);
+void ui_event_ScreenRegister(lv_event_t * e);
+extern lv_obj_t * ui_ScreenRegister;
+void ui_event_PanelReg(lv_event_t * e);
+extern lv_obj_t * ui_PanelReg;
+void ui_event_RegUser(lv_event_t * e);
+extern lv_obj_t * ui_RegUser;
+void ui_event_RegPass(lv_event_t * e);
+extern lv_obj_t * ui_RegPass;
+void ui_event_BtnSubmitReg(lv_event_t * e);
+extern lv_obj_t * ui_BtnSubmitReg;
 extern lv_obj_t * ui_Label4;
+void ui_event_RegPassConfirm(lv_event_t * e);
+extern lv_obj_t * ui_RegPassConfirm;
+extern lv_obj_t * ui_Label5;
+void ui_event_Button1(lv_event_t * e);
+extern lv_obj_t * ui_Button1;
+extern lv_obj_t * ui_Label6;
+extern lv_obj_t * ui_KeyboardReg;
 extern lv_obj_t * ui____initial_actions0;
 
 
