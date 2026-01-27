@@ -20,6 +20,7 @@ void ui_ScreenLogin_screen_init(void);
 void ui_event_ScreenLogin(lv_event_t * e);
 extern lv_obj_t * ui_ScreenLogin;
 extern lv_obj_t * ui_KeyboardLogin;
+void ui_event_PanelLogin(lv_event_t * e);
 extern lv_obj_t * ui_PanelLogin;
 void ui_event_InputUser(lv_event_t * e);
 extern lv_obj_t * ui_InputUser;

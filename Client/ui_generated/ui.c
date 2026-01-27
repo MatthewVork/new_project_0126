@@ -14,6 +14,7 @@ void ui_ScreenLogin_screen_init(void);
 void ui_event_ScreenLogin(lv_event_t * e);
 lv_obj_t * ui_ScreenLogin;
 lv_obj_t * ui_KeyboardLogin;
+void ui_event_PanelLogin(lv_event_t * e);
 lv_obj_t * ui_PanelLogin;
 void ui_event_InputUser(lv_event_t * e);
 lv_obj_t * ui_InputUser;
@@ -96,6 +97,14 @@ void ui_event_ScreenLogin(lv_event_t * e)
         _ui_flag_modify(ui_KeyboardLogin, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
+void ui_event_PanelLogin(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        _ui_flag_modify(ui_KeyboardLogin, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
 void ui_event_InputUser(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -111,7 +120,7 @@ void ui_event_InputPass(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         _ui_keyboard_set_target(ui_KeyboardLogin,  ui_InputPass);
-        _ui_flag_modify(ui_KeyboardReg, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+        _ui_flag_modify(ui_KeyboardLogin, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
     }
 }
 void ui_event_BtnLogin(lv_event_t * e)

@@ -154,6 +154,7 @@ void ui_ScreenLogin_screen_init(void)
     lv_obj_add_event_cb(ui_InputPass, ui_event_InputPass, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BtnLogin, ui_event_BtnLogin, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BtnToRegister1, ui_event_BtnToRegister1, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_PanelLogin, ui_event_PanelLogin, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ScreenLogin, ui_event_ScreenLogin, LV_EVENT_ALL, NULL);
 
 }
