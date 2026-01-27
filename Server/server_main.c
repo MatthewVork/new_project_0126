@@ -9,15 +9,6 @@
 #include "server_data.h"
 #include "../Common/game_protocol.h"
 
-// 外部函数声明
-extern int check_login(const char* user, const char* pass);
-extern int check_register(const char* user, const char* pass);
-extern int create_room_logic(int player_idx);
-extern int join_room_logic(int room_id, int player_idx);
-extern void handle_disconnect(int player_idx);
-extern void handle_logout(int player_idx); // 新增
-extern void init_rooms();
-
 Player players[MAX_CLIENTS];
 Room rooms[MAX_ROOMS];
 
@@ -172,6 +163,56 @@ int main() {
                             strcpy(res.message, "Room Full or Not Found");
                         }
                         send(sd, &res, sizeof(res), 0);
+                    }
+
+                    else if (cmd == CMD_LEAVE_ROOM) {
+                        int rid = players[i].current_room_id;
+                        if (rid != -1) {
+                            // 1. 调用 room_manager 里的退出逻辑（减人数、没人则销毁）
+                            if (leave_room_logic(rid, i)) { 
+                                // 2. 重置玩家状态
+                                players[i].state = STATE_LOBBY;
+                                players[i].current_room_id = -1;
+                                
+                                // 3. 回复结果包给客户端
+                                ResultPacket res;
+                                res.cmd = CMD_ROOM_RESULT;
+                                res.success = 1;
+                                strcpy(res.message, "Left Room Success");
+                                send(sd, &res, sizeof(res), 0);
+                            }
+                        }
+                    }
+
+                    else if (cmd == CMD_GET_ROOM_LIST) {
+                        printf("[Net] 玩家 %s 请求刷新房间列表 (仅显示活跃房间)\n", players[i].username);
+
+                        uint8_t res_pkt[1024];
+                        memset(res_pkt, 0, sizeof(res_pkt));
+
+                        res_pkt[0] = CMD_ROOM_LIST_RES; // 命令字 0x21
+                        
+                        // 用来记录实际装进了多少个活跃房间
+                        uint8_t active_count = 0; 
+                        RoomInfo *info_array = (RoomInfo *)&res_pkt[2]; 
+
+                        for (int j = 0; j < MAX_ROOMS; j++) {
+                            // 核心过滤条件：只有房间人数 > 0 才发送给客户端
+                            if (rooms[j].player_count > 0) {
+                                info_array[active_count].room_id      = rooms[j].room_id;
+                                info_array[active_count].player_count = (uint8_t)rooms[j].player_count;
+                                info_array[active_count].status       = (uint8_t)rooms[j].status;
+                                active_count++;
+                            }
+                        }
+
+                        res_pkt[1] = active_count; // 这里的 Count 变成了实际活跃房间数
+
+                        // 计算长度时，要使用活跃房间数 active_count
+                        int total_len = 2 + (active_count * sizeof(RoomInfo));
+                        send(sd, res_pkt, total_len, 0);
+
+                        printf("[Net] 过滤完成：共有 %d 个活跃房间已发送给客户端\n", active_count);
                     }
                 }
             }

@@ -65,6 +65,12 @@ int check_login(const char* user, const char* pass) {
 void handle_logout(int player_idx) {
     if (player_idx < 0 || player_idx >= MAX_CLIENTS) return;
     
+    // --- 关键联动：退出房间 ---
+    int rid = players[player_idx].current_room_id; // 获取当前所在房间
+    if (rid != -1) {
+        leave_room_logic(rid, player_idx); // 先退房，再销户
+    }
+    
     printf("玩家 %s 退出登录\n", players[player_idx].username);
     
     // 清除用户信息，但保持连接（Socket不断）
@@ -76,6 +82,12 @@ void handle_logout(int player_idx) {
 // 断线处理
 void handle_disconnect(int player_idx) {
     if (player_idx < 0 || player_idx >= MAX_CLIENTS) return;
+
+    // --- 关键联动：退出房间 ---
+    int rid = players[player_idx].current_room_id;
+    if (rid != -1) {
+        leave_room_logic(rid, player_idx);
+    }
     
     printf("玩家 (Slot %d) %s 断开连接\n", player_idx, players[player_idx].username);
     

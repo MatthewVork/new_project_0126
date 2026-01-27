@@ -179,6 +179,7 @@ int main(void)
             // ============================
             else if (cmd == CMD_ROOM_LIST_RES) {
                 // 协议格式：[CMD] [Count] [Room1] [Room2] ...
+                printf("[Debug] 客户端收到了服务器回传的房间列表包！\n");
                 int count = buffer[1];
                 RoomInfo *rooms = (RoomInfo*)(buffer + 2);
 
@@ -227,17 +228,26 @@ int main(void)
             }
 
             // ============================
-            // 模块 3: 房间操作结果 (新增)
+            // 模块 3: 房间操作结果 (完善版)
             // ============================
             else if (cmd == CMD_ROOM_RESULT) {
                 ResultPacket* res = (ResultPacket*)buffer;
-                if(res->success) {
-                    printf("[UI] 加入/创建房间成功: %s\n", res->message);
-                    // TODO: 这里未来要写跳转到【下棋界面】的代码
-                    // 例如: _ui_screen_change(&ui_ScreenGame, ...);
+                if (res->success) {
+                    printf("[UI] 房间操作成功: %s\n", res->message);
+
+                    // --- 判断跳转方向 ---
+                    // 如果当前在大厅，说明是“进入”成功，去棋盘
+                    if (lv_scr_act() == ui_ScreenLobby) {
+                        _ui_screen_change(&ui_ScreenGame, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenGame_screen_init);
+                    }
+                    // 如果当前在棋盘，说明是“退出”成功，回大厅
+                    else if (lv_scr_act() == ui_ScreenGame) {
+                        _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
+                        // 退出成功后，主动刷一下大厅列表，确保那个房间真的“消失”了
+                        net_send_get_room_list(); 
+                    }
                 } else {
-                    printf("[UI] 加入/创建失败: %s\n", res->message);
-                    // 可以弹一个简单的 Toast 提示，目前先打印日志
+                    printf("[UI] 操作失败: %s\n", res->message);
                 }
             }
         }

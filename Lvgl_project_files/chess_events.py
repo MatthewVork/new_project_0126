@@ -14,3 +14,11 @@ def OnLogoutClicked(event_struct):
 def OnRefreshClicked(event_struct):
     return
 
+
+def OnCreateRoomClicked(event_struct):
+    return
+
+
+def OnLeaveRoomClicked(event_struct):
+    return
+

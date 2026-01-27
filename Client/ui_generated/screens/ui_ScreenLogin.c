@@ -8,7 +8,7 @@
 void ui_ScreenLogin_screen_init(void)
 {
     ui_ScreenLogin = lv_obj_create(NULL);
-    lv_obj_clear_flag(ui_ScreenLogin, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_ScreenLogin, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC);      /// Flags
 
     ui_KeyboardLogin = lv_keyboard_create(ui_ScreenLogin);
     lv_obj_set_width(ui_KeyboardLogin, 425);

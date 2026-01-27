@@ -58,3 +58,38 @@ int join_room_logic(int room_id, int player_idx) {
     
     return 0; // 其他情况视为失败
 }
+
+// 退出房间逻辑：负责修改房间数组的状态
+int leave_room_logic(int room_id, int player_idx) {
+    // 1. 安全检查：防止非法房间号
+    if (room_id < 0 || room_id >= MAX_ROOMS) return 0;
+    
+    // 获取房间指针
+    Room *room = &rooms[room_id];
+
+    // 2. 检查玩家是否在该房间，并清理位置
+    if (room->white_player_idx == player_idx) {
+        room->white_player_idx = -1;
+        room->player_count--;
+    } else if (room->black_player_idx == player_idx) {
+        room->black_player_idx = -1;
+        room->player_count--;
+    } else {
+        return 0; // 玩家不在该房间内
+    }
+
+    // 3. 核心逻辑：无人则销毁
+    if (room->player_count <= 0) {
+        room->player_count = 0;
+        room->status = 0; // 重置为等待状态
+        room->white_player_idx = -1;
+        room->black_player_idx = -1;
+        printf("[Room] 房间 %d 已清空，系统已自动回收该房间\n", room_id);
+    } else {
+        // 如果还剩 1 个人，将房间状态改回“等待中”
+        room->status = 0; 
+        printf("[Room] 玩家 (ID:%d) 离开房间 %d，剩余人数: %d\n", player_idx, room_id, room->player_count);
+    }
+
+    return 1;
+}

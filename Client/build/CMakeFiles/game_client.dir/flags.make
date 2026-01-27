@@ -4,7 +4,7 @@
 # compile C with /usr/bin/cc
 C_DEFINES = -DLV_CONF_INCLUDE_SIMPLE -DLV_LVGL_H_INCLUDE_SIMPLE
 
-C_INCLUDES = -I/mnt/c/Users/Matthew/Desktop/project_0126/Client/. -I/mnt/c/Users/Matthew/Desktop/project_0126/Client/../Common -I/mnt/c/Users/Matthew/Desktop/project_0126/Client/game -I/mnt/c/Users/Matthew/Desktop/project_0126/Client/network -I/mnt/c/Users/Matthew/Desktop/project_0126/Client/ui_generated -I/mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl -I/mnt/c/Users/Matthew/Desktop/project_0126/Client/lv_drivers
+C_INCLUDES = -I/mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/. -I/mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/../Common -I/mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/game -I/mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/network -I/mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/ui_generated -I/mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl -I/mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lv_drivers
 
 C_FLAGS = -std=gnu99 -O3 -g
 

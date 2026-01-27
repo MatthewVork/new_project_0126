@@ -1,8 +1,8 @@
 CMakeFiles/game_client.dir/lvgl/src/core/lv_obj_class.c.o: \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_obj_class.c \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_obj_class.c \
  /usr/include/stdc-predef.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_obj.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../lv_conf_internal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_obj.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../lv_conf_internal.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -19,95 +19,95 @@ CMakeFiles/game_client.dir/lvgl/src/core/lv_obj_class.c.o: \
  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../lv_conf_kconfig.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/./lv_conf.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../lv_conf_kconfig.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/./lv_conf.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_style.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/../font/lv_font.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/../font/../lv_conf_internal.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/../font/lv_symbol_def.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/../font/../misc/lv_area.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/../font/../misc/../lv_conf_internal.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_color.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/../lv_conf_internal.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_assert.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_log.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_types.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_mem.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_style.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/../font/lv_font.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/../font/../lv_conf_internal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/../font/lv_symbol_def.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/../font/../misc/lv_area.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/../font/../misc/../lv_conf_internal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_color.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/../lv_conf_internal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_assert.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_log.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_types.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_mem.h \
  /usr/include/string.h \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
  /usr/include/strings.h \
  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_math.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_area.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_anim.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_txt.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_math.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_area.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_anim.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_txt.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_printf.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_printf.h \
  /usr/include/inttypes.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_bidi.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_style_gen.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_types.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_area.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_color.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_assert.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/lv_hal.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/lv_hal_disp.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/lv_hal.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/../lv_conf_internal.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_style.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_txt.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_img_decoder.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_img_buf.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_color.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_area.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_fs.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/../misc/../lv_conf_internal.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_types.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_img_cache.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_rect.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/sw/lv_draw_sw_gradient.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/sw/../../misc/lv_color.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/sw/../../misc/lv_style.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/sw/lv_draw_sw_dither.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/sw/../../core/lv_obj_pos.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/sw/../../core/../misc/lv_area.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_label.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_bidi.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_img.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_line.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_triangle.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_arc.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_mask.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_math.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_transform.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_layer.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../misc/lv_color.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../misc/lv_area.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../misc/lv_ll.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../misc/lv_timer.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../misc/../lv_conf_internal.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../misc/../hal/lv_hal_tick.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../misc/../hal/../lv_conf_internal.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/lv_hal_indev.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/../lv_conf_internal.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../hal/lv_hal_tick.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_obj_tree.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_obj_pos.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_obj_scroll.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_anim.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_obj_style.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_bidi.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_obj_style_gen.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_obj_draw.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../draw/lv_draw.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_obj_class.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_event.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_group.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../misc/lv_ll.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/lv_theme.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/core/../core/lv_obj.h
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_bidi.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_style_gen.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_types.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_area.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_color.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_assert.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/lv_hal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/lv_hal_disp.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/lv_hal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/../lv_conf_internal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_style.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_txt.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_img_decoder.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_img_buf.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_color.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_area.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_fs.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/../misc/../lv_conf_internal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_types.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_img_cache.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_rect.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/sw/lv_draw_sw_gradient.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/sw/../../misc/lv_color.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/sw/../../misc/lv_style.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/sw/lv_draw_sw_dither.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/sw/../../core/lv_obj_pos.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/sw/../../core/../misc/lv_area.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_label.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_bidi.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_img.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_line.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_triangle.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_arc.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_mask.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/../misc/lv_math.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_transform.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../draw/lv_draw_layer.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../misc/lv_color.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../misc/lv_area.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../misc/lv_ll.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../misc/lv_timer.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../misc/../lv_conf_internal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../misc/../hal/lv_hal_tick.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../misc/../hal/../lv_conf_internal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/lv_hal_indev.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/../lv_conf_internal.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../hal/lv_hal_tick.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_obj_tree.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_obj_pos.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_obj_scroll.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_anim.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_obj_style.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_bidi.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_obj_style_gen.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_obj_draw.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../draw/lv_draw.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_obj_class.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_event.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_group.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../misc/lv_ll.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/lv_theme.h \
+ /mnt/c/Users/18450/OneDrive/Desktop/new_project_0126/Client/lvgl/src/core/../core/lv_obj.h

@@ -88,6 +88,12 @@ extern lv_obj_t * ui_Label8;
 void ui_event_BtnCreateRoom(lv_event_t * e);
 extern lv_obj_t * ui_BtnCreateRoom;
 extern lv_obj_t * ui_awdwad;
+// SCREEN: ui_ScreenGame
+void ui_ScreenGame_screen_init(void);
+extern lv_obj_t * ui_ScreenGame;
+void ui_event_Button4(lv_event_t * e);
+extern lv_obj_t * ui_Button4;
+extern lv_obj_t * ui_Label16;
 extern lv_obj_t * ui____initial_actions0;
 
 

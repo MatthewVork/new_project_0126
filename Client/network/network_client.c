@@ -99,4 +99,12 @@ void net_send_get_room_list() {
     uint8_t cmd = CMD_GET_ROOM_LIST;
     send_raw(&cmd, 1);
     printf("[Net] 请求刷新房间列表...\n");
+    printf("[Debug] UI 刷新按钮被点击了，准备发送网络包...\n");
+}
+
+void net_send_leave_room() {
+    // 使用协议中定义的命令字（假设你已在 game_protocol.h 定义为 0x25）
+    uint8_t cmd = CMD_LEAVE_ROOM; 
+    send_raw(&cmd, 1); // 发送 1 字节的命令请求
+    printf("[Net] 发送离开房间请求...\n");
 }

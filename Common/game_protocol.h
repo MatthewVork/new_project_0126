@@ -22,6 +22,7 @@
 #define CMD_CREATE_ROOM   0x22 // 创建房间
 #define CMD_JOIN_ROOM     0x23 // 加入房间
 #define CMD_ROOM_RESULT   0x24 // 房间操作结果(成功/失败)
+#define CMD_LEAVE_ROOM    0x25 // 离开房间请求
 
 // 0x30 - 0x3F: 游戏逻辑相关
 #define CMD_GAME_START    0x30 // 游戏开始 (分配阵营)

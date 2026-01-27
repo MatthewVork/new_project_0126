@@ -39,4 +39,16 @@ typedef struct {
 extern Player players[MAX_CLIENTS];
 extern Room rooms[MAX_ROOMS];
 
+// 房间管理逻辑 (来自 room_manager.c)
+void init_rooms();
+int create_room_logic(int player_idx);
+int join_room_logic(int room_id, int player_idx);
+int leave_room_logic(int room_id, int player_idx); // 新增的退出逻辑
+
+// 用户管理逻辑 (来自 user_manager.c)
+int check_login(const char* user, const char* pass);
+int check_register(const char* user, const char* pass);
+void handle_logout(int player_idx);
+void handle_disconnect(int player_idx);
+
 #endif

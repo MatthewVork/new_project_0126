@@ -55,6 +55,7 @@ add_executable(game_client
     ${LVGL_SOURCES}
     ${DRV_SOURCES} # 如果上面 DRIVERS_SOURCES 变量名写错了，修正为 DRV_SOURCES 逻辑:
     ${DRIVERS_SOURCES}
+    "../Common/cJson.c"  # 公共协议的 cJSON 实现文件
 )
 
 # --- 6. 链接库文件 ---

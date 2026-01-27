@@ -86,6 +86,14 @@ lv_obj_t * ui_Label8;
 void ui_event_BtnCreateRoom(lv_event_t * e);
 lv_obj_t * ui_BtnCreateRoom;
 lv_obj_t * ui_awdwad;
+
+
+// SCREEN: ui_ScreenGame
+void ui_ScreenGame_screen_init(void);
+lv_obj_t * ui_ScreenGame;
+void ui_event_Button4(lv_event_t * e);
+lv_obj_t * ui_Button4;
+lv_obj_t * ui_Label16;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -240,6 +248,14 @@ void ui_event_BtnCreateRoom(lv_event_t * e)
         OnCreateRoomClicked(e);
     }
 }
+void ui_event_Button4(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        OnLeaveRoomClicked(e);
+    }
+}
 
 ///////////////////// SCREENS ////////////////////
 
@@ -252,6 +268,7 @@ void ui_init(void)
     ui_ScreenLogin_screen_init();
     ui_ScreenRegister_screen_init();
     ui_ScreenLobby_screen_init();
+    ui_ScreenGame_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_ScreenLogin);
 }

@@ -15,6 +15,7 @@ void OnRegisterClicked(lv_event_t * e);
 void OnLogoutClicked(lv_event_t * e);
 void OnRefreshClicked(lv_event_t * e);
 void OnCreateRoomClicked(lv_event_t * e);
+void OnLeaveRoomClicked(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

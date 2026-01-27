@@ -55,3 +55,14 @@ void OnRefreshClicked(lv_event_t * e) {
 void OnCreateRoomClicked(lv_event_t * e) {
     net_send_create_room();   // 发送请求
 }
+
+// 对应你在 SLS 里给按钮设置的 Clicked 事件函数名
+void OnLeaveRoomClicked(lv_event_t * e)
+{
+    printf("[UI] 玩家点击了离开房间按钮\n");
+    
+    // 1. 调用上面写好的网络函数通知服务器
+    net_send_leave_room();
+    // 2. 界面跳转回大厅
+    //_ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
+}
