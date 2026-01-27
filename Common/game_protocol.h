@@ -14,7 +14,7 @@
 #define CMD_LOGIN         0x10 // 登录请求
 #define CMD_REGISTER      0x11 // 注册请求
 #define CMD_AUTH_RESULT   0x12 // 登录/注册结果
-#define CMD_LOGOUT        0x13 // 退出登录请求
+#define CMD_LOGOUT        0x13 // 退出登录请求 (新增, 0x13)
 
 // 0x20 - 0x2F: 大厅/房间相关
 #define CMD_GET_ROOM_LIST 0x20 // 获取房间列表
@@ -39,14 +39,14 @@ typedef struct {
     char password[32];
 } AuthPacket;
 
-// 2. 通用结果响应包 (用于登录、加入房间等的结果)
+// 2. 通用结果响应包
 typedef struct {
     uint8_t cmd;        // CMD_AUTH_RESULT 或 CMD_ROOM_RESULT
     uint8_t success;    // 1=成功, 0=失败
     char message[64];   // 错误提示信息
 } ResultPacket;
 
-// 3. 房间信息 (用于列表显示)
+// 3. 房间信息
 typedef struct {
     int32_t room_id;
     uint8_t player_count; // 0, 1, 2
@@ -59,7 +59,7 @@ typedef struct {
     int32_t room_id;    // 创建时填-1，加入时填房间号
 } RoomActionPacket;
 
-// 5. 走棋数据包 (最核心)
+// 5. 走棋数据包
 typedef struct {
     uint8_t cmd;        // CMD_MOVE_PIECE
     uint8_t from_x;     // 起点 X

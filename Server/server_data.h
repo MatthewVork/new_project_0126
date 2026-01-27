@@ -1,45 +1,42 @@
 #ifndef SERVER_DATA_H
 #define SERVER_DATA_H
 
-#include <netinet/in.h> // for sockaddr_in
+#include <netinet/in.h>
 
-#define MAX_CLIENTS 100
-#define MAX_ROOMS 50
+// --- 参数配置 ---
+#define MAX_CLIENTS 10
+#define MAX_ROOMS 5
 
-// 玩家状态枚举
-typedef enum {
-    STATE_DISCONNECTED = 0, // 断开
-    STATE_CONNECTED,        // 已连接但未登录
-    STATE_LOBBY,            //在大厅（已登录）
-    STATE_IN_ROOM,          // 在房间等待
-    STATE_PLAYING           // 游戏中
-} ClientState;
+// --- 状态定义 ---
+#define STATE_DISCONNECTED 0
+#define STATE_CONNECTED    1  // 已连接但未登录
+#define STATE_LOBBY        2  // 已登录，在大厅
+#define STATE_IN_ROOM      3  // 在房间中
+
+// --- 数据结构 ---
 
 // 玩家结构体
 typedef struct {
-    int socket_fd;          // 套接字描述符
-    ClientState state;      // 当前状态
+    int socket_fd;          // 套接字句柄 (0表示空闲)
+    int state;              // 当前状态
     char username[32];      // 用户名
-    int current_room_id;    // 当前所在的房间ID (-1表示不在)
-    int is_red_side;        // 1=红方, 0=黑方
+    int current_room_id;    // 当前所在的房间ID (-1表示不在房间)
 } Player;
 
 // 房间结构体
 typedef struct {
-    int id;                 // 房间ID
-    int player1_idx;        // 玩家1在 players数组中的下标 (-1为空)
-    int player2_idx;        // 玩家2在 players数组中的下标 (-1为空)
-    int is_active;          // 是否被占用
-    int game_started;       // 是否正在游戏
+    int room_id;
+    int player_count;       // 当前人数 (0-2)
+    int status;             // 0=等待中, 1=游戏中
+    
+    // 记录两个玩家在 players 数组中的下标 (index)
+    int white_player_idx;   
+    int black_player_idx;
 } Room;
 
-// 导出全局变量 (在 server_main.c 中定义)
+// --- 全局变量声明 (extern) ---
+// 告诉其他 .c 文件：这些变量是在 server_main.c 里定义的，你们可以直接用
 extern Player players[MAX_CLIENTS];
 extern Room rooms[MAX_ROOMS];
-
-// 函数声明
-void init_server_data();
-int find_free_player_slot();
-int find_player_by_fd(int fd);
 
 #endif

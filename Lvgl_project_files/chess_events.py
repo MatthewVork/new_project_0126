@@ -6,3 +6,7 @@ def OnLoginClicked(event_struct):
 def OnRegisterClicked(event_struct):
     return
 
+
+def OnLogoutClicked(event_struct):
+    return
+

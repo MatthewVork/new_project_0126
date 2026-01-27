@@ -3020,7 +3020,7 @@
               {
                 "disabled": false,
                 "nid": 1142461007,
-                "strtype": "PANEL/EventHandler",
+                "strtype": "_event/EventHandler",
                 "strval": "CLICKED",
                 "childs": [
                   {
@@ -13096,50 +13096,39 @@
                     "InheritedType": 10
                   },
                   {
-                    "nid": 1710196540,
+                    "nid": 867565812,
                     "strtype": "_event/action",
-                    "strval": "CHANGE SCREEN",
+                    "strval": "CALL FUNCTION",
                     "childs": [
                       {
-                        "nid": 777275425,
-                        "strtype": "CHANGE SCREEN/Name",
-                        "strval": "CHANGE SCREEN",
+                        "nid": -1618635106,
+                        "strtype": "CALL FUNCTION/Name",
+                        "strval": "CALL FUNCTION",
                         "InheritedType": 10
                       },
                       {
-                        "nid": 373403325,
-                        "strtype": "CHANGE SCREEN/Call",
-                        "strval": "ChangeScreen( <{Screen_to}>, lv.SCR_LOAD_ANIM.<{Fade_mode}>, <{Speed}>, <{Delay}>)",
+                        "nid": 2096228164,
+                        "strtype": "CALL FUNCTION/Call",
+                        "strval": "<{Function_name}>( event_struct )",
                         "InheritedType": 10
                       },
                       {
-                        "nid": -1815327735,
-                        "strtype": "CHANGE SCREEN/CallC",
-                        "strval": "_ui_screen_change( &<{Screen_to}>, LV_SCR_LOAD_ANIM_<{Fade_mode}>, <{Speed}>, <{Delay}>, &<{Screen_to}>_screen_init);",
+                        "nid": 521046496,
+                        "strtype": "CALL FUNCTION/CallC",
+                        "strval": "<{Function_name}>( e );",
                         "InheritedType": 10
                       },
                       {
-                        "nid": 1496434196,
-                        "strtype": "CHANGE SCREEN/Screen_to",
-                        "strval": "GUID50952171-1022089S165526",
-                        "InheritedType": 9
+                        "nid": 1377212961,
+                        "strtype": "CALL FUNCTION/Function_name",
+                        "strval": "OnLogoutClicked",
+                        "InheritedType": 10
                       },
                       {
-                        "nid": 49467139,
-                        "strtype": "CHANGE SCREEN/Fade_mode",
-                        "strval": "FADE_ON",
-                        "InheritedType": 3
-                      },
-                      {
-                        "nid": -1794952368,
-                        "strtype": "CHANGE SCREEN/Speed",
-                        "integer": 500,
-                        "InheritedType": 6
-                      },
-                      {
-                        "nid": -1643877892,
-                        "strtype": "CHANGE SCREEN/Delay",
-                        "InheritedType": 6
+                        "nid": -1916470697,
+                        "strtype": "CALL FUNCTION/Dont_export_function",
+                        "strval": "False",
+                        "InheritedType": 2
                       }
                     ],
                     "InheritedType": 10

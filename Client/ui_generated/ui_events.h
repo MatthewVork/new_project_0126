@@ -12,6 +12,7 @@ extern "C" {
 
 void OnLoginClicked(lv_event_t * e);
 void OnRegisterClicked(lv_event_t * e);
+void OnLogoutClicked(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/
