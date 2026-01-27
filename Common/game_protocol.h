@@ -14,6 +14,7 @@
 #define CMD_LOGIN         0x10 // 登录请求
 #define CMD_REGISTER      0x11 // 注册请求
 #define CMD_AUTH_RESULT   0x12 // 登录/注册结果
+#define CMD_LOGOUT        0x13 // 退出登录请求
 
 // 0x20 - 0x2F: 大厅/房间相关
 #define CMD_GET_ROOM_LIST 0x20 // 获取房间列表
