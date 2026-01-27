@@ -1,7 +1,10 @@
 #include "ui.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "../network/network_client.h"
+
+static bool is_player_ready = false;
 
 // 登录按钮
 void OnLoginClicked(lv_event_t * e)
@@ -65,4 +68,28 @@ void OnLeaveRoomClicked(lv_event_t * e)
     net_send_leave_room();
     // 2. 界面跳转回大厅
     //_ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
+}
+
+void OnReadyClicked(lv_event_t * e) {
+    if (!is_player_ready) {
+        // --- 动作：准备 ---
+        uint8_t cmd = CMD_READY;
+        send_raw(&cmd, 1);
+        
+        // 更新 UI
+        lv_label_set_text(ui_Labelreadybtninfo, "I'm Ready");
+        // 如果想改按钮颜色，也可以在这里改
+        // lv_obj_set_style_bg_color(ui_BtnReady, lv_palette_main(LV_PALETTE_GREEN), 0);
+        
+        is_player_ready = true;
+    } else {
+        // --- 动作：取消准备 ---
+        uint8_t cmd = CMD_CANCEL_READY;
+        send_raw(&cmd, 1);
+        
+        // 更新 UI
+        lv_label_set_text(ui_Labelreadybtninfo, "Not Ready");
+        
+        is_player_ready = false;
+    }
 }

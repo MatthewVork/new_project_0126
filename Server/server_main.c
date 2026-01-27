@@ -153,11 +153,20 @@ int main() {
                         RoomActionPacket *req = (RoomActionPacket*)buffer;
                         ResultPacket res;
                         res.cmd = CMD_ROOM_RESULT;
+
                         if (join_room_logic(req->room_id, i)) {
+                            // A. 先告诉当前申请加入的玩家：你进房成功了
                             res.success = 1;
                             players[i].state = STATE_IN_ROOM;
                             players[i].current_room_id = req->room_id;
                             sprintf(res.message, "Joined Room %d", req->room_id);
+                            send(sd, &res, sizeof(res), 0);
+
+                            // B. 检查人数：如果满 2 人，立即触发广播
+                            if (rooms[req->room_id].player_count == 2) {
+                                // 调用你刚写的广播函数！
+                                broadcast_game_start(req->room_id);
+                            }
                         } else {
                             res.success = 0;
                             strcpy(res.message, "Room Full or Not Found");
@@ -213,6 +222,23 @@ int main() {
                         send(sd, res_pkt, total_len, 0);
 
                         printf("[Net] 过滤完成：共有 %d 个活跃房间已发送给客户端\n", active_count);
+                    }
+
+                    // 修改 server_main.c 中的这个部分
+                    else if (cmd == CMD_READY || cmd == CMD_CANCEL_READY) {
+                        int rid = players[i].current_room_id;
+                        if (rid != -1) {
+                            // 1. 调用新的 Toggle 逻辑（传入 cmd 是否等于 CMD_READY 来判断是准备还是取消）
+                            handle_ready_toggle(rid, i, (cmd == CMD_READY));
+
+                            // 2. 只有在“准备”动作时，才检查是否需要开赛
+                            if (cmd == CMD_READY) {
+                                if (rooms[rid].player_count == 2 && rooms[rid].white_ready && rooms[rid].black_ready) {
+                                    rooms[rid].status = 2; // 设为游戏中状态
+                                    broadcast_game_start(rid); // 广播开赛
+                                }
+                            }
+                        }
                     }
                 }
             }

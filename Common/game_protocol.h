@@ -29,6 +29,8 @@
 #define CMD_MOVE_PIECE    0x31 // 走棋
 #define CMD_GAME_OVER     0x32 // 游戏结束
 #define CMD_SURRENDER     0x33 // 认输
+#define CMD_READY         0x34 // 准备请求
+#define CMD_CANCEL_READY  0x35 // 取消准备请求
 
 // --- 数据结构定义 ---
 
@@ -68,6 +70,14 @@ typedef struct {
     uint8_t to_x;       // 终点 X
     uint8_t to_y;       // 终点 Y
 } MovePacket;
+
+typedef struct {
+    uint8_t cmd;        // CMD_GAME_START
+    char red_name[32];  // 红方名字
+    char black_name[32]; // 黑方名字
+    uint8_t your_side;  // 0=红方, 1=黑方
+} GameStartPacket;
+
 #pragma pack()
 
 #endif

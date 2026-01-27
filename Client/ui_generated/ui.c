@@ -94,6 +94,10 @@ lv_obj_t * ui_ScreenGame;
 void ui_event_Button4(lv_event_t * e);
 lv_obj_t * ui_Button4;
 lv_obj_t * ui_Label16;
+void ui_event_Button5(lv_event_t * e);
+lv_obj_t * ui_Button5;
+void ui_event_Labelreadybtninfo(lv_event_t * e);
+lv_obj_t * ui_Labelreadybtninfo;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -254,6 +258,22 @@ void ui_event_Button4(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         OnLeaveRoomClicked(e);
+    }
+}
+void ui_event_Button5(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        OnReadyClicked(e);
+    }
+}
+void ui_event_Labelreadybtninfo(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        OnReadyClicked(e);
     }
 }
 

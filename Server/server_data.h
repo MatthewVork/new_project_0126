@@ -32,6 +32,10 @@ typedef struct {
     // 记录两个玩家在 players 数组中的下标 (index)
     int white_player_idx;   
     int black_player_idx;
+
+    // --- 新增：准备标记 ---
+    int white_ready;      // 1=已准备, 0=未准备
+    int black_ready;      // 1=已准备, 0=未准备
 } Room;
 
 // --- 全局变量声明 (extern) ---
@@ -44,11 +48,14 @@ void init_rooms();
 int create_room_logic(int player_idx);
 int join_room_logic(int room_id, int player_idx);
 int leave_room_logic(int room_id, int player_idx); // 新增的退出逻辑
+void broadcast_game_start(int room_id);
 
 // 用户管理逻辑 (来自 user_manager.c)
 int check_login(const char* user, const char* pass);
 int check_register(const char* user, const char* pass);
 void handle_logout(int player_idx);
 void handle_disconnect(int player_idx);
+void handle_ready_toggle(int room_id, int player_idx, int is_ready);
+void broadcast_game_start(int room_id);
 
 #endif

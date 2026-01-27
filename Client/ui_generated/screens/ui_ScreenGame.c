@@ -14,7 +14,7 @@ void ui_ScreenGame_screen_init(void)
     lv_obj_set_width(ui_Button4, 60);
     lv_obj_set_height(ui_Button4, 30);
     lv_obj_set_x(ui_Button4, -20);
-    lv_obj_set_y(ui_Button4, -90);
+    lv_obj_set_y(ui_Button4, -20);
     lv_obj_set_align(ui_Button4, LV_ALIGN_BOTTOM_RIGHT);
     lv_obj_add_flag(ui_Button4, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button4, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -25,6 +25,23 @@ void ui_ScreenGame_screen_init(void)
     lv_obj_set_align(ui_Label16, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label16, "Back");
 
+    ui_Button5 = lv_btn_create(ui_ScreenGame);
+    lv_obj_set_width(ui_Button5, 60);
+    lv_obj_set_height(ui_Button5, 30);
+    lv_obj_set_x(ui_Button5, -20);
+    lv_obj_set_y(ui_Button5, -60);
+    lv_obj_set_align(ui_Button5, LV_ALIGN_BOTTOM_RIGHT);
+    lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_Button5, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Labelreadybtninfo = lv_label_create(ui_Button5);
+    lv_obj_set_width(ui_Labelreadybtninfo, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Labelreadybtninfo, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Labelreadybtninfo, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Labelreadybtninfo, "ready");
+
     lv_obj_add_event_cb(ui_Button4, ui_event_Button4, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Labelreadybtninfo, ui_event_Labelreadybtninfo, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Button5, ui_event_Button5, LV_EVENT_ALL, NULL);
 
 }

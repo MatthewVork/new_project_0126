@@ -94,6 +94,10 @@ extern lv_obj_t * ui_ScreenGame;
 void ui_event_Button4(lv_event_t * e);
 extern lv_obj_t * ui_Button4;
 extern lv_obj_t * ui_Label16;
+void ui_event_Button5(lv_event_t * e);
+extern lv_obj_t * ui_Button5;
+void ui_event_Labelreadybtninfo(lv_event_t * e);
+extern lv_obj_t * ui_Labelreadybtninfo;
 extern lv_obj_t * ui____initial_actions0;
 
 

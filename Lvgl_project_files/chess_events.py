@@ -22,3 +22,7 @@ def OnCreateRoomClicked(event_struct):
 def OnLeaveRoomClicked(event_struct):
     return
 
+
+def OnReadyClicked(event_struct):
+    return
+

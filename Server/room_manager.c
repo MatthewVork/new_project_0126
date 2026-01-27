@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <string.h>
 #include "server_data.h" // 一定要包含这个，才能认识 Room 和 Player 结构
+#include "../Common/game_protocol.h"    
 
 // 初始化所有房间
 void init_rooms() {
@@ -9,6 +11,8 @@ void init_rooms() {
         rooms[i].status = 0; // 0=Wait
         rooms[i].white_player_idx = -1; // -1 表示空
         rooms[i].black_player_idx = -1;
+        rooms[i].white_ready = 0; // 初始化为未准备
+        rooms[i].black_ready = 0;
     }
     printf("[System] 房间系统初始化完成 (%d 个房间)\n", MAX_ROOMS);
 }
@@ -84,6 +88,8 @@ int leave_room_logic(int room_id, int player_idx) {
         room->status = 0; // 重置为等待状态
         room->white_player_idx = -1;
         room->black_player_idx = -1;
+        room->white_ready = 0;
+        room->black_ready = 0;
         printf("[Room] 房间 %d 已清空，系统已自动回收该房间\n", room_id);
     } else {
         // 如果还剩 1 个人，将房间状态改回“等待中”
@@ -92,4 +98,48 @@ int leave_room_logic(int room_id, int player_idx) {
     }
 
     return 1;
+}
+// 广播游戏开始信息给房间内的双方玩家
+void broadcast_game_start(int room_id) {
+    Room *r = &rooms[room_id];
+    GameStartPacket pkt;
+    pkt.cmd = CMD_GAME_START; // 0x30
+
+    // 准备数据：从全局 players 数组获取名字
+    strncpy(pkt.red_name, players[r->white_player_idx].username, 32);
+    strncpy(pkt.black_name, players[r->black_player_idx].username, 32);
+
+    // 1. 发送给红方 (白方下标)
+    if (r->white_player_idx != -1) {
+        pkt.your_side = 0; // 标记你是红方
+        int fd = players[r->white_player_idx].socket_fd;
+        send(fd, &pkt, sizeof(pkt), 0);
+    }
+
+    // 2. 发送给黑方
+    if (r->black_player_idx != -1) {
+        pkt.your_side = 1; // 标记你是黑方
+        int fd = players[r->black_player_idx].socket_fd;
+        send(fd, &pkt, sizeof(pkt), 0);
+    }
+    
+    printf("[Broadcast] 房间 %d 的游戏开始信息已同步给双方\n", room_id);
+}
+
+// 处理准备和取消准备
+void handle_ready_toggle(int room_id, int player_idx, int is_ready) {
+    if (room_id < 0 || room_id >= MAX_ROOMS) return;
+    Room *r = &rooms[room_id];
+
+    // 如果游戏已经开始了，就不允许更改准备状态
+    if (r->status == 2) return; 
+
+    // 根据是哪一方来修改标记
+    if (r->white_player_idx == player_idx) {
+        r->white_ready = is_ready;
+    } else if (r->black_player_idx == player_idx) {
+        r->black_ready = is_ready;
+    }
+
+    printf("[Room] 房间 %d: 玩家 %d %s\n", room_id, player_idx, is_ready ? "已准备" : "取消准备");
 }
