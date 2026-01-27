@@ -87,6 +87,69 @@ void ui_ScreenLogin_screen_init(void)
     lv_obj_set_align(ui_Label2, LV_ALIGN_TOP_MID);
     lv_label_set_text(ui_Label2, "welcome chess match system");
 
+    ui_PanelLoginSuccess = lv_obj_create(ui_ScreenLogin);
+    lv_obj_set_width(ui_PanelLoginSuccess, 800);
+    lv_obj_set_height(ui_PanelLoginSuccess, 480);
+    lv_obj_set_align(ui_PanelLoginSuccess, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PanelLoginSuccess, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_PanelLoginSuccess, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_PanelLoginSuccess, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelLoginSuccess, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel2 = lv_obj_create(ui_PanelLoginSuccess);
+    lv_obj_set_width(ui_Panel2, 240);
+    lv_obj_set_height(ui_Panel2, 50);
+    lv_obj_set_align(ui_Panel2, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label7 = lv_label_create(ui_Panel2);
+    lv_obj_set_width(ui_Label7, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label7, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label7, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label7, "Login success! Goto menu...");
+
+    ui_PanelLoginFail = lv_obj_create(ui_ScreenLogin);
+    lv_obj_set_width(ui_PanelLoginFail, 800);
+    lv_obj_set_height(ui_PanelLoginFail, 480);
+    lv_obj_set_align(ui_PanelLoginFail, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PanelLoginFail, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_PanelLoginFail, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_PanelLoginFail, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelLoginFail, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel3 = lv_obj_create(ui_PanelLoginFail);
+    lv_obj_set_width(ui_Panel3, 420);
+    lv_obj_set_height(ui_Panel3, 50);
+    lv_obj_set_align(ui_Panel3, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel3, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label9 = lv_label_create(ui_Panel3);
+    lv_obj_set_width(ui_Label9, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label9, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label9, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label9, "Login fail! please check your username or password.");
+
+    ui_PanelLoginRepeat = lv_obj_create(ui_ScreenLogin);
+    lv_obj_set_width(ui_PanelLoginRepeat, 800);
+    lv_obj_set_height(ui_PanelLoginRepeat, 480);
+    lv_obj_set_align(ui_PanelLoginRepeat, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PanelLoginRepeat, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_PanelLoginRepeat, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_PanelLoginRepeat, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelLoginRepeat, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel4 = lv_obj_create(ui_PanelLoginRepeat);
+    lv_obj_set_width(ui_Panel4, 280);
+    lv_obj_set_height(ui_Panel4, 50);
+    lv_obj_set_align(ui_Panel4, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel4, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label10 = lv_label_create(ui_Panel4);
+    lv_obj_set_width(ui_Label10, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label10, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label10, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label10, "Login fail! You can not login repeat!");
+
     lv_obj_add_event_cb(ui_InputUser, ui_event_InputUser, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_InputPass, ui_event_InputPass, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BtnLogin, ui_event_BtnLogin, LV_EVENT_ALL, NULL);

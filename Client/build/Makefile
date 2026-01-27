@@ -4929,6 +4929,30 @@ ui_generated/components/ui_comp_hook.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/components/ui_comp_hook.c.s
 .PHONY : ui_generated/components/ui_comp_hook.c.s
 
+ui_generated/screens/ui_ScreenLobby.o: ui_generated/screens/ui_ScreenLobby.c.o
+.PHONY : ui_generated/screens/ui_ScreenLobby.o
+
+# target to build an object file
+ui_generated/screens/ui_ScreenLobby.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLobby.c.o
+.PHONY : ui_generated/screens/ui_ScreenLobby.c.o
+
+ui_generated/screens/ui_ScreenLobby.i: ui_generated/screens/ui_ScreenLobby.c.i
+.PHONY : ui_generated/screens/ui_ScreenLobby.i
+
+# target to preprocess a source file
+ui_generated/screens/ui_ScreenLobby.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLobby.c.i
+.PHONY : ui_generated/screens/ui_ScreenLobby.c.i
+
+ui_generated/screens/ui_ScreenLobby.s: ui_generated/screens/ui_ScreenLobby.c.s
+.PHONY : ui_generated/screens/ui_ScreenLobby.s
+
+# target to generate assembly for a file
+ui_generated/screens/ui_ScreenLobby.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLobby.c.s
+.PHONY : ui_generated/screens/ui_ScreenLobby.c.s
+
 ui_generated/screens/ui_ScreenLogin.o: ui_generated/screens/ui_ScreenLogin.c.o
 .PHONY : ui_generated/screens/ui_ScreenLogin.o
 
@@ -5658,6 +5682,9 @@ help:
 	@echo "... ui_generated/components/ui_comp_hook.o"
 	@echo "... ui_generated/components/ui_comp_hook.i"
 	@echo "... ui_generated/components/ui_comp_hook.s"
+	@echo "... ui_generated/screens/ui_ScreenLobby.o"
+	@echo "... ui_generated/screens/ui_ScreenLobby.i"
+	@echo "... ui_generated/screens/ui_ScreenLobby.s"
 	@echo "... ui_generated/screens/ui_ScreenLogin.o"
 	@echo "... ui_generated/screens/ui_ScreenLogin.i"
 	@echo "... ui_generated/screens/ui_ScreenLogin.s"

@@ -26,6 +26,15 @@ void ui_event_BtnToRegister1(lv_event_t * e);
 lv_obj_t * ui_BtnToRegister1;
 lv_obj_t * ui_Label3;
 lv_obj_t * ui_Label2;
+lv_obj_t * ui_PanelLoginSuccess;
+lv_obj_t * ui_Panel2;
+lv_obj_t * ui_Label7;
+lv_obj_t * ui_PanelLoginFail;
+lv_obj_t * ui_Panel3;
+lv_obj_t * ui_Label9;
+lv_obj_t * ui_PanelLoginRepeat;
+lv_obj_t * ui_Panel4;
+lv_obj_t * ui_Label10;
 
 
 // SCREEN: ui_ScreenRegister
@@ -48,6 +57,24 @@ void ui_event_Button1(lv_event_t * e);
 lv_obj_t * ui_Button1;
 lv_obj_t * ui_Label6;
 lv_obj_t * ui_KeyboardReg;
+lv_obj_t * ui_PanelRegSuccess;
+lv_obj_t * ui_Panel5;
+lv_obj_t * ui_Label11;
+lv_obj_t * ui_PanelRegFail;
+lv_obj_t * ui_Panel6;
+lv_obj_t * ui_Label12;
+lv_obj_t * ui_PanelRegRepeat;
+lv_obj_t * ui_Panel7;
+lv_obj_t * ui_Label13;
+
+
+// SCREEN: ui_ScreenLobby
+void ui_ScreenLobby_screen_init(void);
+lv_obj_t * ui_ScreenLobby;
+void ui_event_Button3(lv_event_t * e);
+lv_obj_t * ui_Button3;
+void ui_event_Label14(lv_event_t * e);
+lv_obj_t * ui_Label14;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -84,6 +111,7 @@ void ui_event_InputPass(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         _ui_keyboard_set_target(ui_KeyboardLogin,  ui_InputPass);
+        _ui_flag_modify(ui_KeyboardReg, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
     }
 }
 void ui_event_BtnLogin(lv_event_t * e)
@@ -161,6 +189,22 @@ void ui_event_Button1(lv_event_t * e)
         _ui_screen_change(&ui_ScreenLogin, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLogin_screen_init);
     }
 }
+void ui_event_Button3(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        _ui_screen_change(&ui_ScreenLogin, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLogin_screen_init);
+    }
+}
+void ui_event_Label14(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        _ui_screen_change(&ui_ScreenLogin, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLogin_screen_init);
+    }
+}
 
 ///////////////////// SCREENS ////////////////////
 
@@ -172,6 +216,7 @@ void ui_init(void)
     lv_disp_set_theme(dispp, theme);
     ui_ScreenLogin_screen_init();
     ui_ScreenRegister_screen_init();
+    ui_ScreenLobby_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_ScreenLogin);
 }

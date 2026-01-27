@@ -399,6 +399,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/game_client.dir/network/network_client.c.o.d"
   "CMakeFiles/game_client.dir/ui_generated/components/ui_comp_hook.c.o"
   "CMakeFiles/game_client.dir/ui_generated/components/ui_comp_hook.c.o.d"
+  "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLobby.c.o"
+  "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLobby.c.o.d"
   "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLogin.c.o"
   "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLogin.c.o.d"
   "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenRegister.c.o"

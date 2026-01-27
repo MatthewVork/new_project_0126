@@ -252,10 +252,9 @@ CMakeFiles/game_client.dir/main.c.o: \
  /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/extra/widgets/imgbtn/../../../lvgl.h \
  /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/extra/widgets/span/lv_span.h \
  /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/src/extra/widgets/span/../../../lvgl.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lv_drv_conf.h \
- /mnt/c/Users/Matthew/Desktop/project_0126/Client/lv_conf.h \
  /mnt/c/Users/Matthew/Desktop/project_0126/Client/lv_drivers/sdl/sdl.h \
  /mnt/c/Users/Matthew/Desktop/project_0126/Client/./lv_drv_conf.h \
+ /mnt/c/Users/Matthew/Desktop/project_0126/Client/./lv_conf.h \
  /mnt/c/Users/Matthew/Desktop/project_0126/Client/lv_drivers/sdl/sdl_common.h \
  /mnt/c/Users/Matthew/Desktop/project_0126/Client/lvgl/lvgl.h \
  /mnt/c/Users/Matthew/Desktop/project_0126/Client/ui_generated/ui.h \

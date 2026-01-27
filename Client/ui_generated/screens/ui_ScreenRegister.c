@@ -97,6 +97,69 @@ void ui_ScreenRegister_screen_init(void)
     lv_obj_set_align(ui_KeyboardReg, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_KeyboardReg, LV_OBJ_FLAG_HIDDEN);     /// Flags
 
+    ui_PanelRegSuccess = lv_obj_create(ui_ScreenRegister);
+    lv_obj_set_width(ui_PanelRegSuccess, 800);
+    lv_obj_set_height(ui_PanelRegSuccess, 480);
+    lv_obj_set_align(ui_PanelRegSuccess, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PanelRegSuccess, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_PanelRegSuccess, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_PanelRegSuccess, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelRegSuccess, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel5 = lv_obj_create(ui_PanelRegSuccess);
+    lv_obj_set_width(ui_Panel5, 300);
+    lv_obj_set_height(ui_Panel5, 50);
+    lv_obj_set_align(ui_Panel5, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel5, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label11 = lv_label_create(ui_Panel5);
+    lv_obj_set_width(ui_Label11, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label11, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label11, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label11, "Register success! Goto login menu...");
+
+    ui_PanelRegFail = lv_obj_create(ui_ScreenRegister);
+    lv_obj_set_width(ui_PanelRegFail, 800);
+    lv_obj_set_height(ui_PanelRegFail, 480);
+    lv_obj_set_align(ui_PanelRegFail, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PanelRegFail, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_PanelRegFail, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_PanelRegFail, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelRegFail, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel6 = lv_obj_create(ui_PanelRegFail);
+    lv_obj_set_width(ui_Panel6, 420);
+    lv_obj_set_height(ui_Panel6, 50);
+    lv_obj_set_align(ui_Panel6, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel6, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label12 = lv_label_create(ui_Panel6);
+    lv_obj_set_width(ui_Label12, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label12, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label12, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label12, "Login Fail! please check your username and password!");
+
+    ui_PanelRegRepeat = lv_obj_create(ui_ScreenRegister);
+    lv_obj_set_width(ui_PanelRegRepeat, 800);
+    lv_obj_set_height(ui_PanelRegRepeat, 480);
+    lv_obj_set_align(ui_PanelRegRepeat, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_PanelRegRepeat, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelRegRepeat, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel7 = lv_obj_create(ui_PanelRegRepeat);
+    lv_obj_set_width(ui_Panel7, 360);
+    lv_obj_set_height(ui_Panel7, 50);
+    lv_obj_set_align(ui_Panel7, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel7, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label13 = lv_label_create(ui_Panel7);
+    lv_obj_set_width(ui_Label13, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label13, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label13, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label13, "Register repeat! please change your username.");
+
     lv_obj_add_event_cb(ui_RegUser, ui_event_RegUser, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_RegPass, ui_event_RegPass, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BtnSubmitReg, ui_event_BtnSubmitReg, LV_EVENT_ALL, NULL);
