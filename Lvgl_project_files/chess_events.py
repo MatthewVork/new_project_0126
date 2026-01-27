@@ -10,3 +10,7 @@ def OnRegisterClicked(event_struct):
 def OnLogoutClicked(event_struct):
     return
 
+
+def OnRefreshClicked(event_struct):
+    return
+

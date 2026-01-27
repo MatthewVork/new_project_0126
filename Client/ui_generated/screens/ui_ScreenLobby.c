@@ -25,7 +25,69 @@ void ui_ScreenLobby_screen_init(void)
     lv_obj_set_align(ui_Label14, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label14, "Logout");
 
+    ui_PanelRoomContainer = lv_obj_create(ui_ScreenLobby);
+    lv_obj_set_width(ui_PanelRoomContainer, 600);
+    lv_obj_set_height(ui_PanelRoomContainer, 400);
+    lv_obj_set_x(ui_PanelRoomContainer, -76);
+    lv_obj_set_y(ui_PanelRoomContainer, -21);
+    lv_obj_set_align(ui_PanelRoomContainer, LV_ALIGN_CENTER);
+    lv_obj_set_flex_flow(ui_PanelRoomContainer, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_PanelRoomContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+
+    ui_PanelRoomTemplate = lv_obj_create(ui_PanelRoomContainer);
+    lv_obj_set_width(ui_PanelRoomTemplate, 260);
+    lv_obj_set_height(ui_PanelRoomTemplate, 120);
+    lv_obj_set_align(ui_PanelRoomTemplate, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PanelRoomTemplate, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_PanelRoomTemplate, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_LabelRoomID = lv_label_create(ui_PanelRoomTemplate);
+    lv_obj_set_width(ui_LabelRoomID, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_LabelRoomID, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_LabelRoomID, -72);
+    lv_obj_set_y(ui_LabelRoomID, -11);
+    lv_obj_set_align(ui_LabelRoomID, LV_ALIGN_CENTER);
+
+    ui_LabelRoomState = lv_label_create(ui_PanelRoomTemplate);
+    lv_obj_set_width(ui_LabelRoomState, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_LabelRoomState, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_LabelRoomState, 7);
+    lv_obj_set_y(ui_LabelRoomState, -11);
+    lv_obj_set_align(ui_LabelRoomState, LV_ALIGN_CENTER);
+
+    ui_BtnRefresh = lv_btn_create(ui_ScreenLobby);
+    lv_obj_set_width(ui_BtnRefresh, 100);
+    lv_obj_set_height(ui_BtnRefresh, 50);
+    lv_obj_set_x(ui_BtnRefresh, 314);
+    lv_obj_set_y(ui_BtnRefresh, -129);
+    lv_obj_set_align(ui_BtnRefresh, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_BtnRefresh, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_BtnRefresh, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label8 = lv_label_create(ui_BtnRefresh);
+    lv_obj_set_width(ui_Label8, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label8, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label8, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label8, "Refresh");
+
+    ui_BtnCreateRoom = lv_btn_create(ui_ScreenLobby);
+    lv_obj_set_width(ui_BtnCreateRoom, 100);
+    lv_obj_set_height(ui_BtnCreateRoom, 50);
+    lv_obj_set_x(ui_BtnCreateRoom, 311);
+    lv_obj_set_y(ui_BtnCreateRoom, -61);
+    lv_obj_set_align(ui_BtnCreateRoom, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_BtnCreateRoom, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_BtnCreateRoom, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_awdwad = lv_label_create(ui_BtnCreateRoom);
+    lv_obj_set_width(ui_awdwad, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_awdwad, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_awdwad, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_awdwad, "Create Room");
+
     lv_obj_add_event_cb(ui_Label14, ui_event_Label14, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Button3, ui_event_Button3, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_BtnRefresh, ui_event_BtnRefresh, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_BtnCreateRoom, ui_event_BtnCreateRoom, LV_EVENT_ALL, NULL);
 
 }

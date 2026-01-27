@@ -76,6 +76,16 @@ void ui_event_Button3(lv_event_t * e);
 lv_obj_t * ui_Button3;
 void ui_event_Label14(lv_event_t * e);
 lv_obj_t * ui_Label14;
+lv_obj_t * ui_PanelRoomContainer;
+lv_obj_t * ui_PanelRoomTemplate;
+lv_obj_t * ui_LabelRoomID;
+lv_obj_t * ui_LabelRoomState;
+void ui_event_BtnRefresh(lv_event_t * e);
+lv_obj_t * ui_BtnRefresh;
+lv_obj_t * ui_Label8;
+void ui_event_BtnCreateRoom(lv_event_t * e);
+lv_obj_t * ui_BtnCreateRoom;
+lv_obj_t * ui_awdwad;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -212,6 +222,22 @@ void ui_event_Label14(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         _ui_screen_change(&ui_ScreenLogin, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLogin_screen_init);
+    }
+}
+void ui_event_BtnRefresh(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        OnRefreshClicked(e);
+    }
+}
+void ui_event_BtnCreateRoom(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        OnCreateRoomClicked(e);
     }
 }
 

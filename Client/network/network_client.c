@@ -93,3 +93,10 @@ int net_poll(uint8_t* out_pkt_buffer) {
     }
     return 0;
 }
+
+void net_send_get_room_list() {
+    // 不需要带数据，只要发个命令头就行
+    uint8_t cmd = CMD_GET_ROOM_LIST;
+    send_raw(&cmd, 1);
+    printf("[Net] 请求刷新房间列表...\n");
+}

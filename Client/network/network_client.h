@@ -16,5 +16,6 @@ void net_send_join_room(int room_id);
 
 // 接收功能
 int net_poll(uint8_t* out_pkt_buffer);
+void net_send_get_room_list();
 
 #endif

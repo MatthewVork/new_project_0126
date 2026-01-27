@@ -47,3 +47,11 @@ void OnLogoutClicked(lv_event_t * e)
     // 参数说明: 目标屏幕, 动画方式(向右滑出), 动画时间500ms, 延迟0ms, 初始化函数
     _ui_screen_change(&ui_ScreenLogin, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLogin_screen_init);
 }
+void OnRefreshClicked(lv_event_t * e) {
+    net_send_get_room_list(); // 发送请求
+}
+
+// 创建房间按钮被点击
+void OnCreateRoomClicked(lv_event_t * e) {
+    net_send_create_room();   // 发送请求
+}

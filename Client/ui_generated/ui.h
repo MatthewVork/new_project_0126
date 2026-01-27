@@ -78,6 +78,16 @@ void ui_event_Button3(lv_event_t * e);
 extern lv_obj_t * ui_Button3;
 void ui_event_Label14(lv_event_t * e);
 extern lv_obj_t * ui_Label14;
+extern lv_obj_t * ui_PanelRoomContainer;
+extern lv_obj_t * ui_PanelRoomTemplate;
+extern lv_obj_t * ui_LabelRoomID;
+extern lv_obj_t * ui_LabelRoomState;
+void ui_event_BtnRefresh(lv_event_t * e);
+extern lv_obj_t * ui_BtnRefresh;
+extern lv_obj_t * ui_Label8;
+void ui_event_BtnCreateRoom(lv_event_t * e);
+extern lv_obj_t * ui_BtnCreateRoom;
+extern lv_obj_t * ui_awdwad;
 extern lv_obj_t * ui____initial_actions0;
 
 
