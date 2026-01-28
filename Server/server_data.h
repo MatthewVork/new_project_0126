@@ -49,6 +49,7 @@ int create_room_logic(int player_idx);
 int join_room_logic(int room_id, int player_idx);
 int leave_room_logic(int room_id, int player_idx); // 新增的退出逻辑
 void broadcast_game_start(int room_id);
+void broadcast_room_info(int room_id);
 
 // 用户管理逻辑 (来自 user_manager.c)
 int check_login(const char* user, const char* pass);

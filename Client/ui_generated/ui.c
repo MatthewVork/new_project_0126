@@ -98,6 +98,8 @@ void ui_event_Button5(lv_event_t * e);
 lv_obj_t * ui_Button5;
 void ui_event_Labelreadybtninfo(lv_event_t * e);
 lv_obj_t * ui_Labelreadybtninfo;
+lv_obj_t * ui_LabelPlayer1;
+lv_obj_t * ui_LabelPlayer2;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////

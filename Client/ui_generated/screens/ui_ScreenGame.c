@@ -11,7 +11,7 @@ void ui_ScreenGame_screen_init(void)
     lv_obj_clear_flag(ui_ScreenGame, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
     ui_Button4 = lv_btn_create(ui_ScreenGame);
-    lv_obj_set_width(ui_Button4, 60);
+    lv_obj_set_width(ui_Button4, 80);
     lv_obj_set_height(ui_Button4, 30);
     lv_obj_set_x(ui_Button4, -20);
     lv_obj_set_y(ui_Button4, -20);
@@ -26,7 +26,7 @@ void ui_ScreenGame_screen_init(void)
     lv_label_set_text(ui_Label16, "Back");
 
     ui_Button5 = lv_btn_create(ui_ScreenGame);
-    lv_obj_set_width(ui_Button5, 60);
+    lv_obj_set_width(ui_Button5, 80);
     lv_obj_set_height(ui_Button5, 30);
     lv_obj_set_x(ui_Button5, -20);
     lv_obj_set_y(ui_Button5, -60);
@@ -39,6 +39,23 @@ void ui_ScreenGame_screen_init(void)
     lv_obj_set_height(ui_Labelreadybtninfo, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Labelreadybtninfo, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Labelreadybtninfo, "ready");
+
+    ui_LabelPlayer1 = lv_label_create(ui_ScreenGame);
+    lv_obj_set_width(ui_LabelPlayer1, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_LabelPlayer1, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_LabelPlayer1, 20);
+    lv_obj_set_y(ui_LabelPlayer1, 20);
+    lv_label_set_text(ui_LabelPlayer1, "Host: Waiting...");
+    lv_obj_set_style_text_color(ui_LabelPlayer1, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_LabelPlayer1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_LabelPlayer2 = lv_label_create(ui_ScreenGame);
+    lv_obj_set_width(ui_LabelPlayer2, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_LabelPlayer2, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_LabelPlayer2, -20);
+    lv_obj_set_y(ui_LabelPlayer2, 20);
+    lv_obj_set_align(ui_LabelPlayer2, LV_ALIGN_TOP_RIGHT);
+    lv_label_set_text(ui_LabelPlayer2, "Guest: Waiting...");
 
     lv_obj_add_event_cb(ui_Button4, ui_event_Button4, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Labelreadybtninfo, ui_event_Labelreadybtninfo, LV_EVENT_ALL, NULL);

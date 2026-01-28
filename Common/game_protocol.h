@@ -23,6 +23,7 @@
 #define CMD_JOIN_ROOM     0x23 // 加入房间
 #define CMD_ROOM_RESULT   0x24 // 房间操作结果(成功/失败)
 #define CMD_LEAVE_ROOM    0x25 // 离开房间请求
+#define CMD_ROOM_UPDATE   0x26 // 房间状态更新包
 
 // 0x30 - 0x3F: 游戏逻辑相关
 #define CMD_GAME_START    0x30 // 游戏开始 (分配阵营)
@@ -77,6 +78,24 @@ typedef struct {
     char black_name[32]; // 黑方名字
     uint8_t your_side;  // 0=红方, 1=黑方
 } GameStartPacket;
+
+// --- 在 game_protocol.h 的命令字定义区域添加 ---
+// --- 在数据结构定义区域添加 ---
+// 房间状态更新包：每次有人进出、准备、取消准备，都发这个包给房间里的所有人
+typedef struct {
+    uint8_t cmd;            // CMD_ROOM_UPDATE (0x26)
+    int32_t room_id;
+    
+    // 玩家1 (通常是房主/白方) 信息
+    char p1_name[32];       // 名字，空字符串表示没人
+    uint8_t p1_state;       // 0=空位, 1=有人
+    uint8_t p1_ready;       // 1=已准备
+
+    // 玩家2 (黑方) 信息
+    char p2_name[32];
+    uint8_t p2_state;       // 0=空位, 1=有人
+    uint8_t p2_ready;       // 1=已准备
+} RoomUpdatePacket;
 
 #pragma pack()
 

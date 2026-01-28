@@ -32,6 +32,7 @@ int create_room_logic(int player_idx) {
             rooms[i].black_player_idx = -1;
             
             printf("[Room] 玩家 %s (ID:%d) 创建了房间 %d\n", players[player_idx].username, player_idx, i);
+            broadcast_room_info(i);
             return i;
         }
     }
@@ -57,6 +58,9 @@ int join_room_logic(int room_id, int player_idx) {
         rooms[room_id].black_player_idx = player_idx;
         
         printf("[Room] 玩家 %s (ID:%d) 加入了房间 %d. 游戏开始!\n", players[player_idx].username, player_idx, room_id);
+
+        broadcast_room_info(room_id);
+
         return 1;
     }
     
@@ -95,10 +99,54 @@ int leave_room_logic(int room_id, int player_idx) {
         // 如果还剩 1 个人，将房间状态改回“等待中”
         room->status = 0; 
         printf("[Room] 玩家 (ID:%d) 离开房间 %d，剩余人数: %d\n", player_idx, room_id, room->player_count);
+        broadcast_room_info(room_id);
     }
 
     return 1;
 }
+
+// --- 新增函数：广播房间最新状态给房间内的所有人 ---
+void broadcast_room_info(int room_id) {
+    if (room_id < 0 || room_id >= MAX_ROOMS) return;
+    Room *r = &rooms[room_id];
+
+    RoomUpdatePacket pkt;
+    memset(&pkt, 0, sizeof(pkt));
+    pkt.cmd = CMD_ROOM_UPDATE;
+    pkt.room_id = room_id;
+
+    // 填充玩家1 (白方) 信息
+    if (r->white_player_idx != -1) {
+        strncpy(pkt.p1_name, players[r->white_player_idx].username, 32);
+        pkt.p1_state = 1;
+        pkt.p1_ready = r->white_ready;
+    } else {
+        pkt.p1_state = 0; // 空位
+        pkt.p1_ready = 0;
+    }
+
+    // 填充玩家2 (黑方) 信息
+    if (r->black_player_idx != -1) {
+        strncpy(pkt.p2_name, players[r->black_player_idx].username, 32);
+        pkt.p2_state = 1;
+        pkt.p2_ready = r->black_ready;
+    } else {
+        pkt.p2_state = 0; // 空位
+        pkt.p2_ready = 0;
+    }
+
+    // 发送给白方
+    if (r->white_player_idx != -1) {
+        send(players[r->white_player_idx].socket_fd, &pkt, sizeof(pkt), 0);
+    }
+    // 发送给黑方
+    if (r->black_player_idx != -1) {
+        send(players[r->black_player_idx].socket_fd, &pkt, sizeof(pkt), 0);
+    }
+    
+    printf("[Room] 房间 %d 状态已同步 (P1: %s, P2: %s)\n", room_id, pkt.p1_name, pkt.p2_name);
+}
+
 // 广播游戏开始信息给房间内的双方玩家
 void broadcast_game_start(int room_id) {
     Room *r = &rooms[room_id];
@@ -142,4 +190,5 @@ void handle_ready_toggle(int room_id, int player_idx, int is_ready) {
     }
 
     printf("[Room] 房间 %d: 玩家 %d %s\n", room_id, player_idx, is_ready ? "已准备" : "取消准备");
+    broadcast_room_info(room_id);
 }

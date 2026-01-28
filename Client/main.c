@@ -250,6 +250,55 @@ int main(void)
                     printf("[UI] 操作失败: %s\n", res->message);
                 }
             }
+
+            // ============================
+            // 模块 4: 房间状态更新 (配合 SLS UI 版)
+            // ============================
+            else if (cmd == CMD_ROOM_UPDATE) {
+                RoomUpdatePacket *pkt = (RoomUpdatePacket*)buffer;
+                printf("[UI] 收到状态更新: P1=%s, P2=%s\n", pkt->p1_name, pkt->p2_name);
+
+                // 1. 确保在游戏页
+                if (lv_scr_act() != ui_ScreenGame) {
+                     _ui_screen_change(&ui_ScreenGame, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenGame_screen_init);
+                }
+
+                // 2. 更新 P1 (房主)
+                if (pkt->p1_state) {
+                    // 使用 #颜色代码# 需要在 SLS 里勾选 Recolor，或者代码里强制开启
+                    lv_label_set_recolor(ui_LabelPlayer1, true); 
+                    lv_label_set_text_fmt(ui_LabelPlayer1, "Host: %s\n%s", 
+                                          pkt->p1_name, 
+                                          pkt->p1_ready ? "#00ff00 [READY]#" : "#ffff00 [WAITING]#");
+                } else {
+                    lv_label_set_text(ui_LabelPlayer1, "Host: (Empty)");
+                }
+
+                // 3. 更新 P2 (挑战者)
+                if (pkt->p2_state) {
+                    lv_label_set_recolor(ui_LabelPlayer2, true);
+                    lv_label_set_text_fmt(ui_LabelPlayer2, "Player: %s\n%s", 
+                                          pkt->p2_name, 
+                                          pkt->p2_ready ? "#00ff00 [READY]#" : "#ffff00 [WAITING]#");
+                } else {
+                    lv_label_set_text(ui_LabelPlayer2, "Player: (Waiting Join...)");
+                }
+            }
+
+            // ============================
+            // 模块 5: 游戏开始 (★ 新增重点)
+            // ============================
+            else if (cmd == CMD_GAME_START) {
+                printf("[UI] 收到游戏开始信号！\n");
+                
+                // 隐藏准备按钮，因为游戏开始了，不能再取消准备了
+                if(ui_Button5) {
+                    lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
+                }
+
+                // 可以在这里改变 Label，提示游戏开始
+                // ... 后续这里可以添加绘制棋盘的逻辑 ...
+            }
         }
 
         usleep(5000); // 5ms 睡眠，降低 CPU 占用
