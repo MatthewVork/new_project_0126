@@ -273,24 +273,41 @@ int main(void)
                 }
             }
 
-            // ★★★ 模块 5: 【新增】游戏开始 (集成你的箭头逻辑) ★★★
+            // ★★★ 模块 5: 游戏开始 ★★★
             else if (cmd == CMD_GAME_START) {
                 GameStartPacket *pkt = (GameStartPacket*)buffer;
                 my_game_color = pkt->your_color;
                 current_game_turn = COLOR_BLACK;
+                
+                printf("[UI] 收到游戏开始信号！准备重置棋盘...\n");
 
-                // A. 显示 Start 面板 (3秒后自动消失)
-                if (ui_PanelStartTip) {
-                    lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
-                    lv_timer_set_repeat_count(lv_timer_create(timer_hide_start_panel, 3000, NULL), 1);
-                }
-
-                // B. 隐藏准备按钮
-                if(ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
-
-                // C. 清盘和更新箭头状态
+                // 1. 【先】执行所有可能干扰画面的逻辑
+                // 先把棋盘清空，把箭头更新好。让它们先画，铺在底下。
                 if(ui_BoardContainer) board_view_clear(ui_BoardContainer);
                 update_turn_ui(); 
+                
+                // 隐藏准备按钮
+                if(ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
+
+                // 2. 【后】再显示弹窗 (确保它盖在一切之上)
+                if (ui_PanelStartTip) {
+                    printf("[UI] 正在把提示框置顶并显示...\n");
+                    
+                    // 强制置顶 (这句依然是核心)
+                    lv_obj_move_foreground(ui_PanelStartTip);
+                    
+                    // 解除隐藏
+                    lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
+                    
+                    // ★★★ 新增：强制重绘 ★★★ 
+                    // 告诉系统这个控件“脏”了，必须立刻画出来，防止被优化掉
+                    lv_obj_invalidate(ui_PanelStartTip); 
+
+                    // 启动定时器 (3秒后关闭)
+                    lv_timer_set_repeat_count(lv_timer_create(timer_hide_start_panel, 3000, NULL), 1);
+                } else {
+                    printf("[UI] 严重错误：找不到 ui_PanelStartTip 控件！\n");
+                }
             }
 
             // ★★★ 模块 6: 【新增】收到落子 (绘图+切回合) ★★★

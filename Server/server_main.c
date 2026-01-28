@@ -161,6 +161,7 @@ int main() {
                         }
                         
                     }
+                    
                     // --- 加入房间 ---
                     else if (cmd == CMD_JOIN_ROOM) {
                         RoomActionPacket *req = (RoomActionPacket*)buffer;
@@ -168,25 +169,36 @@ int main() {
                         res.cmd = CMD_ROOM_RESULT;
 
                         if (join_room_logic(req->room_id, i)) {
+                            // === 成功逻辑 ===
                             res.success = 1;
                             players[i].state = STATE_IN_ROOM;
                             players[i].current_room_id = req->room_id;
                             sprintf(res.message, "Joined Room %d", req->room_id);
+                            
+                            // 1. 发送成功结果
                             send(sd, &res, sizeof(res), 0);
 
+                            // 2. 广播房间信息 (让大家看到名字)
                             usleep(50000); 
                             broadcast_room_info(req->room_id);
 
-                            // 如果满员，触发开赛广播
+                            // ★★★ 关键操作：这里原来那段“满员自动开始”的代码必须删掉！ ★★★
+                            // 删掉下面这几行：
+                            /*
                             if (rooms[req->room_id].player_count == 2) {
-                                broadcast_game_start(req->room_id);
+                                usleep(20000); 
+                                broadcast_game_start(req->room_id); // <--- 就是这行导致一进房就开赛，必须删掉
                             }
+                            */
+                            
                         } else {
+                            // === 失败逻辑 ===
                             res.success = 0;
                             strcpy(res.message, "Room Full or Not Found");
+                            send(sd, &res, sizeof(res), 0);
                         }
-                        send(sd, &res, sizeof(res), 0);
                     }
+
                     // --- 离开房间 ---
                     else if (cmd == CMD_LEAVE_ROOM) {
                         int rid = players[i].current_room_id;
@@ -227,11 +239,26 @@ int main() {
                     else if (cmd == CMD_READY || cmd == CMD_CANCEL_READY) {
                         int rid = players[i].current_room_id;
                         if (rid != -1) {
+                            // 1. 处理状态切换 (Server/room_manager.c 里的逻辑)
                             handle_ready_toggle(rid, i, (cmd == CMD_READY));
-                            // 如果都在准备状态且人齐，开始游戏
+                            
+                            // 2. ★★★ 补上这句：立刻广播最新状态给所有人 ★★★
+                            // 这样客户端的 [WAITING] 才会立刻变成绿色的 [READY]
+                            broadcast_room_info(rid);
+
+                            // 3. 检查是否开始游戏
                             if (cmd == CMD_READY) {
+                                // 打印调试信息，让你知道服务器现在的判断状态
+                                printf("[CheckStart] Room:%d, Count:%d, B_Ready:%d, W_Ready:%d\n", 
+                                    rid, 
+                                    rooms[rid].player_count, 
+                                    rooms[rid].black_ready, 
+                                    rooms[rid].white_ready);
+
                                 if (rooms[rid].player_count == 2 && rooms[rid].white_ready && rooms[rid].black_ready) {
+                                    printf("[Server] 条件满足，游戏开始！\n");
                                     rooms[rid].status = 2; // 游戏中
+                                    usleep(100000);
                                     broadcast_game_start(rid); 
                                 }
                             }
