@@ -6,6 +6,6 @@
 
 void board_view_draw_stone(lv_obj_t *parent, int x, int y, int color);
 void board_view_clear(lv_obj_t *parent);
-int board_view_get_click_xy(lv_obj_t *board_obj, int *out_x, int *out_y);
+bool board_view_get_click_xy(lv_obj_t *board_obj, int *out_x, int *out_y);
 
 #endif
