@@ -23,40 +23,46 @@ typedef struct {
     int current_room_id;    // 当前所在的房间ID (-1表示不在房间)
 } Player;
 
-// 房间结构体
+// 房间结构体 (围棋版)
 typedef struct {
     int room_id;
-    int player_count;       // 当前人数 (0-2)
-    int status;             // 0=等待中, 1=游戏中
+    int player_count;
+    int status; // 0=Wait, 2=Playing
     
-    // 记录两个玩家在 players 数组中的下标 (index)
+    // 玩家位置: white=白棋(P2), black=黑棋(P1/房主)
     int white_player_idx;   
     int black_player_idx;
+    int white_ready;
+    int black_ready;
 
-    // --- 新增：准备标记 ---
-    int white_ready;      // 1=已准备, 0=未准备
-    int black_ready;      // 1=已准备, 0=未准备
+    // ★★★ 核心新增：每个房间都有自己独立的棋盘 ★★★
+    int8_t board[19][19];   // -1=空, 0=黑, 1=白
+    uint8_t current_turn;   // 0=黑方回合, 1=白方回合
 } Room;
 
 // --- 全局变量声明 (extern) ---
-// 告诉其他 .c 文件：这些变量是在 server_main.c 里定义的，你们可以直接用
 extern Player players[MAX_CLIENTS];
 extern Room rooms[MAX_ROOMS];
 
-// 房间管理逻辑 (来自 room_manager.c)
+// --- 函数声明 ---
+
+// 房间管理 (来自 room_manager.c)
 void init_rooms();
 int create_room_logic(int player_idx);
 int join_room_logic(int room_id, int player_idx);
-int leave_room_logic(int room_id, int player_idx); // 新增的退出逻辑
-void broadcast_game_start(int room_id);
+int leave_room_logic(int room_id, int player_idx);
 void broadcast_room_info(int room_id);
+void broadcast_game_start(int room_id);
+void handle_ready_toggle(int room_id, int player_idx, int is_ready);
 
-// 用户管理逻辑 (来自 user_manager.c)
+// ★ 新增：围棋逻辑声明 ★
+void handle_place_stone(int room_id, int player_idx, int x, int y);
+// void handle_surrender(int room_id, int player_idx); // 如果暂时没做认输，这行可以先注释
+
+// 用户管理 (来自 user_manager.c)
 int check_login(const char* user, const char* pass);
 int check_register(const char* user, const char* pass);
 void handle_logout(int player_idx);
 void handle_disconnect(int player_idx);
-void handle_ready_toggle(int room_id, int player_idx, int is_ready);
-void broadcast_game_start(int room_id);
 
 #endif

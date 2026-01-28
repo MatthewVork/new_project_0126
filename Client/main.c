@@ -7,10 +7,17 @@
 #include <time.h>
 #include <stdio.h>
 
+#include "game/game_config.h"
+#include "game/board_view.h"
+
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 480
 
-// --- 前置声明 ---
+// ★★★ 2. 定义全局游戏状态 ★★★
+int my_game_color = -1;     // 0=黑(Black), 1=白(White)
+int current_game_turn = 0;  // 当前轮到谁 (0=黑, 1=白)
+
+// 辅助函数：前置声明
 void hide_all_popups();
 
 // --- 事件回调：点击房间卡片 ---
@@ -66,6 +73,54 @@ void hide_all_popups() {
     if(ui_PanelRegRepeat)  lv_obj_add_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
 }
 
+// --- 功能 A: 更新 UI 上的回合文字 ---
+void update_turn_ui() {
+    // 假设你在 UI 里放了一个叫 ui_LabelTurnInfo 的标签
+    if (!ui_LabelTurnInfo) return;
+
+    if (current_game_turn == COLOR_BLACK) {
+        lv_label_set_text(ui_LabelTurnInfo, "Turn: BLACK (Thinking...)");
+        // 设为黑色文字
+        lv_obj_set_style_text_color(ui_LabelTurnInfo, lv_color_hex(0x000000), 0);
+    } else {
+        lv_label_set_text(ui_LabelTurnInfo, "Turn: WHITE (Thinking...)");
+        // 设为白色文字
+        lv_obj_set_style_text_color(ui_LabelTurnInfo, lv_color_hex(0xFFFFFF), 0);
+    }
+}
+
+// --- 功能 B: 3秒后自动隐藏“游戏开始”面板 ---
+void timer_hide_start_panel(lv_timer_t * timer) {
+    if (ui_PanelStartTip) {
+        lv_obj_add_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN); // 隐藏
+        printf("[UI] 游戏开始提示已自动关闭\n");
+    }
+}
+
+// --- 功能 C: 棋盘点击事件 (核心) ---
+void event_board_click_handler(lv_event_t * e) {
+    // 1. 规则检查：还没轮到我？别动！
+    if (my_game_color != current_game_turn) {
+        printf("[Game] 还没轮到你！当前轮到: %d, 你是: %d\n", current_game_turn, my_game_color);
+        return;
+    }
+
+    // 2. 算坐标：调用 game/board_view.c 里的算法
+    // e->target 就是被点击的棋盘对象
+    int x, y;
+    if (board_view_get_click_xy(e->target, &x, &y)) {
+        
+        // 3. 发送请求：坐标合法，打包发给服务器
+        StonePacket pkt;
+        pkt.cmd = CMD_PLACE_STONE;
+        pkt.x = x;
+        pkt.y = y;
+        pkt.color = my_game_color; // 告诉服务器我是谁
+        send_raw(&pkt, sizeof(pkt));
+        
+        printf("[Game] 请求落子: (%d, %d)\n", x, y);
+    }
+}
 
 int main(void)
 {

@@ -47,6 +47,8 @@ file(GLOB_RECURSE LVGL_SOURCES "lvgl/src/*.c")
 file(GLOB DRIVERS_SOURCES 
     "lv_drivers/*.c" 
     "lv_drivers/sdl/*.c"
+    "ui_generated/*.c"
+    "game/*.c"
 )
 
 # --- 5. 生成可执行文件 ---

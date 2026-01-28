@@ -48,7 +48,7 @@ int main() {
     }
 
     init_server_data();
-    printf("=== 象棋服务器启动 (Port: %d) ===\n", SERVER_PORT);
+    printf("=== 围棋服务器启动 (Port: %d) ===\n", SERVER_PORT);
 
     while(1) {
         FD_ZERO(&readfds);
@@ -65,7 +65,7 @@ int main() {
 
         if ((activity < 0)) printf("Select error\n");
 
-        // 新连接
+        // 1. 处理新连接
         if (FD_ISSET(server_fd, &readfds)) {
             if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
                 perror("accept");
@@ -82,7 +82,7 @@ int main() {
             }
         }
 
-        // 客户端消息
+        // 2. 处理客户端消息
         for (int i = 0; i < MAX_CLIENTS; i++) {
             int sd = players[i].socket_fd;
 
@@ -95,6 +95,7 @@ int main() {
                 } else {
                     uint8_t cmd = buffer[0];
                     
+                    // --- 登录 ---
                     if (cmd == CMD_LOGIN) {
                         AuthPacket *pkt = (AuthPacket*)buffer;
                         ResultPacket res;
@@ -110,13 +111,14 @@ int main() {
                             printf("登录成功: %s\n", pkt->username);
                         } else if (status == -1) {
                             res.success = 0;
-                            strcpy(res.message, "Login Repeat! User already online."); // 包含 Repeat 关键字
+                            strcpy(res.message, "Login Repeat!"); 
                         } else {
                             res.success = 0;
                             strcpy(res.message, "Wrong Password");
                         }
                         send(sd, &res, sizeof(res), 0);
                     }
+                    // --- 注册 ---
                     else if (cmd == CMD_REGISTER) {
                         AuthPacket *pkt = (AuthPacket*)buffer;
                         ResultPacket res;
@@ -131,9 +133,11 @@ int main() {
                         }
                         send(sd, &res, sizeof(res), 0);
                     }
-                    else if (cmd == CMD_LOGOUT) { // 处理退出登录
+                    // --- 登出 ---
+                    else if (cmd == CMD_LOGOUT) { 
                         handle_logout(i);
                     }
+                    // --- 创建房间 ---
                     else if (cmd == CMD_CREATE_ROOM) {
                         ResultPacket res;
                         res.cmd = CMD_ROOM_RESULT;
@@ -149,22 +153,21 @@ int main() {
                         }
                         send(sd, &res, sizeof(res), 0);
                     }
+                    // --- 加入房间 ---
                     else if (cmd == CMD_JOIN_ROOM) {
                         RoomActionPacket *req = (RoomActionPacket*)buffer;
                         ResultPacket res;
                         res.cmd = CMD_ROOM_RESULT;
 
                         if (join_room_logic(req->room_id, i)) {
-                            // A. 先告诉当前申请加入的玩家：你进房成功了
                             res.success = 1;
                             players[i].state = STATE_IN_ROOM;
                             players[i].current_room_id = req->room_id;
                             sprintf(res.message, "Joined Room %d", req->room_id);
                             send(sd, &res, sizeof(res), 0);
 
-                            // B. 检查人数：如果满 2 人，立即触发广播
+                            // 如果满员，触发开赛广播
                             if (rooms[req->room_id].player_count == 2) {
-                                // 调用你刚写的广播函数！
                                 broadcast_game_start(req->room_id);
                             }
                         } else {
@@ -173,17 +176,13 @@ int main() {
                         }
                         send(sd, &res, sizeof(res), 0);
                     }
-
+                    // --- 离开房间 ---
                     else if (cmd == CMD_LEAVE_ROOM) {
                         int rid = players[i].current_room_id;
                         if (rid != -1) {
-                            // 1. 调用 room_manager 里的退出逻辑（减人数、没人则销毁）
                             if (leave_room_logic(rid, i)) { 
-                                // 2. 重置玩家状态
                                 players[i].state = STATE_LOBBY;
                                 players[i].current_room_id = -1;
-                                
-                                // 3. 回复结果包给客户端
                                 ResultPacket res;
                                 res.cmd = CMD_ROOM_RESULT;
                                 res.success = 1;
@@ -192,21 +191,16 @@ int main() {
                             }
                         }
                     }
-
+                    // --- 刷新列表 ---
                     else if (cmd == CMD_GET_ROOM_LIST) {
-                        printf("[Net] 玩家 %s 请求刷新房间列表 (仅显示活跃房间)\n", players[i].username);
-
                         uint8_t res_pkt[1024];
                         memset(res_pkt, 0, sizeof(res_pkt));
-
-                        res_pkt[0] = CMD_ROOM_LIST_RES; // 命令字 0x21
+                        res_pkt[0] = CMD_ROOM_LIST_RES; 
                         
-                        // 用来记录实际装进了多少个活跃房间
                         uint8_t active_count = 0; 
                         RoomInfo *info_array = (RoomInfo *)&res_pkt[2]; 
 
                         for (int j = 0; j < MAX_ROOMS; j++) {
-                            // 核心过滤条件：只有房间人数 > 0 才发送给客户端
                             if (rooms[j].player_count > 0) {
                                 info_array[active_count].room_id      = rooms[j].room_id;
                                 info_array[active_count].player_count = (uint8_t)rooms[j].player_count;
@@ -214,30 +208,31 @@ int main() {
                                 active_count++;
                             }
                         }
-
-                        res_pkt[1] = active_count; // 这里的 Count 变成了实际活跃房间数
-
-                        // 计算长度时，要使用活跃房间数 active_count
+                        res_pkt[1] = active_count;
                         int total_len = 2 + (active_count * sizeof(RoomInfo));
                         send(sd, res_pkt, total_len, 0);
-
-                        printf("[Net] 过滤完成：共有 %d 个活跃房间已发送给客户端\n", active_count);
                     }
-
-                    // 修改 server_main.c 中的这个部分
+                    // --- 准备/取消准备 ---
                     else if (cmd == CMD_READY || cmd == CMD_CANCEL_READY) {
                         int rid = players[i].current_room_id;
                         if (rid != -1) {
-                            // 1. 调用新的 Toggle 逻辑（传入 cmd 是否等于 CMD_READY 来判断是准备还是取消）
                             handle_ready_toggle(rid, i, (cmd == CMD_READY));
-
-                            // 2. 只有在“准备”动作时，才检查是否需要开赛
+                            // 如果都在准备状态且人齐，开始游戏
                             if (cmd == CMD_READY) {
                                 if (rooms[rid].player_count == 2 && rooms[rid].white_ready && rooms[rid].black_ready) {
-                                    rooms[rid].status = 2; // 设为游戏中状态
-                                    broadcast_game_start(rid); // 广播开赛
+                                    rooms[rid].status = 2; // 游戏中
+                                    broadcast_game_start(rid); 
                                 }
                             }
+                        }
+                    }
+                    // ★★★ 新增：处理落子 ★★★
+                    else if (cmd == CMD_PLACE_STONE) {
+                        StonePacket *pkt = (StonePacket*)buffer;
+                        int rid = players[i].current_room_id;
+                        if (rid != -1) {
+                            // 转交给 room_manager.c 的逻辑函数
+                            handle_place_stone(rid, i, pkt->x, pkt->y);
                         }
                     }
                 }
