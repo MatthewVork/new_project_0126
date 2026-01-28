@@ -250,7 +250,7 @@ int main(void)
             }
 
             // 模块 4: 【原有逻辑】房间状态更新
-            else if (ui_LabelPlayer1) {
+            else if (cmd == CMD_ROOM_UPDATE) {
                 RoomUpdatePacket *pkt = (RoomUpdatePacket*)buffer;
                 
                 if (lv_scr_act() == ui_ScreenGame) {
@@ -273,40 +273,46 @@ int main(void)
                 }
             }
 
-            // ★★★ 模块 5: 游戏开始 ★★★
+            // ★★★ 模块 5: 游戏开始 (疯狂调试版) ★★★
             else if (cmd == CMD_GAME_START) {
                 GameStartPacket *pkt = (GameStartPacket*)buffer;
                 my_game_color = pkt->your_color;
                 current_game_turn = COLOR_BLACK;
-                
-                printf("[UI] 收到游戏开始信号！准备重置棋盘...\n");
 
-                // 1. 【先】执行所有可能干扰画面的逻辑
-                // 先把棋盘清空，把箭头更新好。让它们先画，铺在底下。
-                if(ui_BoardContainer) board_view_clear(ui_BoardContainer);
+                printf("\n========== [DEBUG] 1. 收到 CMD_GAME_START 信号 ==========\n");
+
+                // 1. 清盘
+                if(ui_BoardContainer) {
+                    board_view_clear(ui_BoardContainer);
+                    printf("[DEBUG] 2. 棋盘已清理\n");
+                }
                 update_turn_ui(); 
-                
-                // 隐藏准备按钮
+
+                // 2. 隐藏按钮
                 if(ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
 
-                // 2. 【后】再显示弹窗 (确保它盖在一切之上)
+                // 3. 显示弹窗 (重头戏)
                 if (ui_PanelStartTip) {
-                    printf("[UI] 正在把提示框置顶并显示...\n");
-                    
-                    // 强制置顶 (这句依然是核心)
-                    lv_obj_move_foreground(ui_PanelStartTip);
-                    
-                    // 解除隐藏
-                    lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
-                    
-                    // ★★★ 新增：强制重绘 ★★★ 
-                    // 告诉系统这个控件“脏”了，必须立刻画出来，防止被优化掉
-                    lv_obj_invalidate(ui_PanelStartTip); 
+                    printf("[DEBUG] 3. 找到 ui_PanelStartTip 控件，准备执行显示命令...\n");
 
-                    // 启动定时器 (3秒后关闭)
+                    // 动作 A: 置顶
+                    lv_obj_move_foreground(ui_PanelStartTip);
+                    printf("[DEBUG] 4. >> 已执行 Move Foreground (置顶)\n");
+                    
+                    // 动作 B: 解除隐藏
+                    lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
+                    printf("[DEBUG] 5. >> 已执行 Clear Hidden (解除隐藏) <<<<<<<<<<< \n");
+                    
+                    // 动作 C: 强制重绘
+                    lv_obj_invalidate(ui_PanelStartTip);
+                    printf("[DEBUG] 6. >> 已执行 Invalidate (强制重绘)\n");
+
+                    // 启动定时器
                     lv_timer_set_repeat_count(lv_timer_create(timer_hide_start_panel, 3000, NULL), 1);
+                    
+                    printf("========== [DEBUG] 7. 【成功执行】所有显示代码已跑完！ ==========\n\n");
                 } else {
-                    printf("[UI] 严重错误：找不到 ui_PanelStartTip 控件！\n");
+                    printf("========== [ERROR] 严重错误：ui_PanelStartTip 是空的(NULL)！ ==========\n");
                 }
             }
 

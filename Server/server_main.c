@@ -239,28 +239,30 @@ int main() {
                     else if (cmd == CMD_READY || cmd == CMD_CANCEL_READY) {
                         int rid = players[i].current_room_id;
                         if (rid != -1) {
-                            // 1. 处理状态切换 (Server/room_manager.c 里的逻辑)
+                            // 1. 更新内存状态
                             handle_ready_toggle(rid, i, (cmd == CMD_READY));
                             
-                            // 2. ★★★ 补上这句：立刻广播最新状态给所有人 ★★★
-                            // 这样客户端的 [WAITING] 才会立刻变成绿色的 [READY]
-                            broadcast_room_info(rid);
+                            // 2. 先判断是否可以开始游戏
+                            int can_start = 0;
+                            if (rooms[rid].player_count == 2 && rooms[rid].white_ready && rooms[rid].black_ready) {
+                                can_start = 1;
+                            }
 
-                            // 3. 检查是否开始游戏
-                            if (cmd == CMD_READY) {
-                                // 打印调试信息，让你知道服务器现在的判断状态
-                                printf("[CheckStart] Room:%d, Count:%d, B_Ready:%d, W_Ready:%d\n", 
-                                    rid, 
-                                    rooms[rid].player_count, 
-                                    rooms[rid].black_ready, 
-                                    rooms[rid].white_ready);
-
-                                if (rooms[rid].player_count == 2 && rooms[rid].white_ready && rooms[rid].black_ready) {
-                                    printf("[Server] 条件满足，游戏开始！\n");
-                                    rooms[rid].status = 2; // 游戏中
-                                    usleep(100000);
-                                    broadcast_game_start(rid); 
-                                }
+                            if (can_start) {
+                                // ★★★ 方案 B (绝杀): 如果能开始，就只发“开始信号”！ ★★★
+                                // 既然游戏都要开始了，那个“变绿”的状态包就别发了，防止粘包卡住客户端
+                                printf("[Server] 条件满足，直接发送开始指令！\n");
+                                rooms[rid].status = 2; // 设为游戏中
+                                
+                                // 稍微延时一点点即可
+                                usleep(50000); 
+                                broadcast_game_start(rid); 
+                            } 
+                            else {
+                                // ★★★ 只有不能开始时，才广播“变绿/变黄”的状态 ★★★
+                                // 这样平时点准备，别人能看到变绿；最后一次点准备，直接进游戏
+                                broadcast_room_info(rid);
+                                printf("[Server] 等待其他玩家，广播状态更新...\n");
                             }
                         }
                     }
