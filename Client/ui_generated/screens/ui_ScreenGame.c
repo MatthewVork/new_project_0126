@@ -62,6 +62,8 @@ void ui_ScreenGame_screen_init(void)
     lv_obj_set_height(ui_BoardContainer, 440);
     lv_obj_set_align(ui_BoardContainer, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_BoardContainer, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_BoardContainer, lv_color_hex(0xDEB887), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_BoardContainer, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_ImgTurnP1 = lv_img_create(ui_ScreenGame);
     lv_img_set_src(ui_ImgTurnP1, &ui_img_arrow_png);
@@ -104,6 +106,14 @@ void ui_ScreenGame_screen_init(void)
     lv_obj_set_height(ui_Label15, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Label15, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label15, "All ready, Game start!");
+
+    ui_Image1 = lv_img_create(ui_ScreenGame);
+    lv_img_set_src(ui_Image1, &ui_img_board_png);
+    lv_obj_set_width(ui_Image1, LV_SIZE_CONTENT);   /// 433
+    lv_obj_set_height(ui_Image1, LV_SIZE_CONTENT);    /// 433
+    lv_obj_set_align(ui_Image1, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Image1, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_Image1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
     lv_obj_add_event_cb(ui_Button4, ui_event_Button4, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Labelreadybtninfo, ui_event_Labelreadybtninfo, LV_EVENT_ALL, NULL);

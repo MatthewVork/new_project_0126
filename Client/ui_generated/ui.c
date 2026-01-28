@@ -106,6 +106,7 @@ lv_obj_t * ui_ImgTurnP2;
 lv_obj_t * ui_PanelStartTip;
 lv_obj_t * ui_Panel8;
 lv_obj_t * ui_Label15;
+lv_obj_t * ui_Image1;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////

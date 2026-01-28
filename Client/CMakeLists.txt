@@ -37,6 +37,7 @@ file(GLOB_RECURSE MY_SOURCES
     "network/*.c"
     "game/*.c"
     "ui_generated/*.c"
+    "ui_generated/images/ui_img_board.c"
 )
 
 # B. LVGL 核心代码 (递归扫描 lvgl/src 下的所有 .c)

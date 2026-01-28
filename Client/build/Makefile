@@ -4977,6 +4977,30 @@ ui_generated/images/ui_img_arrow_png.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/images/ui_img_arrow_png.c.s
 .PHONY : ui_generated/images/ui_img_arrow_png.c.s
 
+ui_generated/images/ui_img_board_png.o: ui_generated/images/ui_img_board_png.c.o
+.PHONY : ui_generated/images/ui_img_board_png.o
+
+# target to build an object file
+ui_generated/images/ui_img_board_png.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/images/ui_img_board_png.c.o
+.PHONY : ui_generated/images/ui_img_board_png.c.o
+
+ui_generated/images/ui_img_board_png.i: ui_generated/images/ui_img_board_png.c.i
+.PHONY : ui_generated/images/ui_img_board_png.i
+
+# target to preprocess a source file
+ui_generated/images/ui_img_board_png.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/images/ui_img_board_png.c.i
+.PHONY : ui_generated/images/ui_img_board_png.c.i
+
+ui_generated/images/ui_img_board_png.s: ui_generated/images/ui_img_board_png.c.s
+.PHONY : ui_generated/images/ui_img_board_png.s
+
+# target to generate assembly for a file
+ui_generated/images/ui_img_board_png.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/images/ui_img_board_png.c.s
+.PHONY : ui_generated/images/ui_img_board_png.c.s
+
 ui_generated/screens/ui_ScreenGame.o: ui_generated/screens/ui_ScreenGame.c.o
 .PHONY : ui_generated/screens/ui_ScreenGame.o
 
@@ -5760,6 +5784,9 @@ help:
 	@echo "... ui_generated/images/ui_img_arrow_png.o"
 	@echo "... ui_generated/images/ui_img_arrow_png.i"
 	@echo "... ui_generated/images/ui_img_arrow_png.s"
+	@echo "... ui_generated/images/ui_img_board_png.o"
+	@echo "... ui_generated/images/ui_img_board_png.i"
+	@echo "... ui_generated/images/ui_img_board_png.s"
 	@echo "... ui_generated/screens/ui_ScreenGame.o"
 	@echo "... ui_generated/screens/ui_ScreenGame.i"
 	@echo "... ui_generated/screens/ui_ScreenGame.s"

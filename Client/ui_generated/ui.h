@@ -106,10 +106,12 @@ extern lv_obj_t * ui_ImgTurnP2;
 extern lv_obj_t * ui_PanelStartTip;
 extern lv_obj_t * ui_Panel8;
 extern lv_obj_t * ui_Label15;
+extern lv_obj_t * ui_Image1;
 extern lv_obj_t * ui____initial_actions0;
 
 
 LV_IMG_DECLARE(ui_img_arrow_png);    // assets/Arrow.png
+LV_IMG_DECLARE(ui_img_board_png);    // assets/board.png
 
 
 

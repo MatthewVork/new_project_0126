@@ -403,6 +403,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/game_client.dir/ui_generated/components/ui_comp_hook.c.o.d"
   "CMakeFiles/game_client.dir/ui_generated/images/ui_img_arrow_png.c.o"
   "CMakeFiles/game_client.dir/ui_generated/images/ui_img_arrow_png.c.o.d"
+  "CMakeFiles/game_client.dir/ui_generated/images/ui_img_board_png.c.o"
+  "CMakeFiles/game_client.dir/ui_generated/images/ui_img_board_png.c.o.d"
   "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenGame.c.o"
   "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenGame.c.o.d"
   "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLobby.c.o"
