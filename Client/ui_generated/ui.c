@@ -100,6 +100,12 @@ void ui_event_Labelreadybtninfo(lv_event_t * e);
 lv_obj_t * ui_Labelreadybtninfo;
 lv_obj_t * ui_LabelPlayer1;
 lv_obj_t * ui_LabelPlayer2;
+lv_obj_t * ui_PanelStartTip;
+lv_obj_t * ui_Panel8;
+lv_obj_t * ui_Label15;
+lv_obj_t * ui_BoardContainer;
+lv_obj_t * ui_ImgTurnP1;
+lv_obj_t * ui_ImgTurnP2;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////

@@ -57,6 +57,54 @@ void ui_ScreenGame_screen_init(void)
     lv_obj_set_align(ui_LabelPlayer2, LV_ALIGN_TOP_RIGHT);
     lv_label_set_text(ui_LabelPlayer2, "Guest: Waiting...");
 
+    ui_PanelStartTip = lv_obj_create(ui_ScreenGame);
+    lv_obj_set_width(ui_PanelStartTip, 800);
+    lv_obj_set_height(ui_PanelStartTip, 480);
+    lv_obj_set_align(ui_PanelStartTip, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_PanelStartTip, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelStartTip, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel8 = lv_obj_create(ui_PanelStartTip);
+    lv_obj_set_width(ui_Panel8, 200);
+    lv_obj_set_height(ui_Panel8, 50);
+    lv_obj_set_align(ui_Panel8, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel8, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label15 = lv_label_create(ui_Panel8);
+    lv_obj_set_width(ui_Label15, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label15, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label15, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label15, "All ready, Game start!");
+
+    ui_BoardContainer = lv_obj_create(ui_ScreenGame);
+    lv_obj_set_width(ui_BoardContainer, 440);
+    lv_obj_set_height(ui_BoardContainer, 440);
+    lv_obj_set_align(ui_BoardContainer, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_BoardContainer, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_ImgTurnP1 = lv_img_create(ui_ScreenGame);
+    lv_img_set_src(ui_ImgTurnP1, &ui_img_arrow_png);
+    lv_obj_set_width(ui_ImgTurnP1, LV_SIZE_CONTENT);   /// 22
+    lv_obj_set_height(ui_ImgTurnP1, LV_SIZE_CONTENT);    /// 22
+    lv_obj_set_x(ui_ImgTurnP1, 60);
+    lv_obj_set_y(ui_ImgTurnP1, 45);
+    lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_ImgTurnP1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_img_set_angle(ui_ImgTurnP1, 1800);
+
+    ui_ImgTurnP2 = lv_img_create(ui_ScreenGame);
+    lv_img_set_src(ui_ImgTurnP2, &ui_img_arrow_png);
+    lv_obj_set_width(ui_ImgTurnP2, LV_SIZE_CONTENT);   /// 22
+    lv_obj_set_height(ui_ImgTurnP2, LV_SIZE_CONTENT);    /// 22
+    lv_obj_set_x(ui_ImgTurnP2, -60);
+    lv_obj_set_y(ui_ImgTurnP2, 45);
+    lv_obj_set_align(ui_ImgTurnP2, LV_ALIGN_TOP_RIGHT);
+    lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_ImgTurnP2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_img_set_angle(ui_ImgTurnP2, 1800);
+
     lv_obj_add_event_cb(ui_Button4, ui_event_Button4, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Labelreadybtninfo, ui_event_Labelreadybtninfo, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Button5, ui_event_Button5, LV_EVENT_ALL, NULL);
