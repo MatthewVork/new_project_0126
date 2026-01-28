@@ -308,4 +308,9 @@ CMakeFiles/game_client.dir/main.c.o: \
  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
  /usr/include/x86_64-linux-gnu/bits/stdio2-decl.h \
  /usr/include/x86_64-linux-gnu/bits/stdio.h \
- /usr/include/x86_64-linux-gnu/bits/stdio2.h
+ /usr/include/x86_64-linux-gnu/bits/stdio2.h \
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/../Common/game_protocol.h \
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/game/game_config.h \
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/game/board_view.h \
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/game/../lvgl/lvgl.h \
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/game/game_config.h

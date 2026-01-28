@@ -103,7 +103,7 @@ int create_room_logic(int player_idx) {
             printf("[Room] 玩家 %s (ID:%d) 创建了房间 %d\n", players[player_idx].username, player_idx, i);
             
             // 立即广播，让房主看到自己的名字
-            broadcast_room_info(i);
+            //broadcast_room_info(i);
             return i;
         }
     }
@@ -130,7 +130,7 @@ int join_room_logic(int room_id, int player_idx) {
         
         printf("[Room] 玩家 %s 加入房间 %d\n", players[player_idx].username, room_id);
         
-        broadcast_room_info(room_id);
+        //broadcast_room_info(room_id);
         return 1;
     }
 }

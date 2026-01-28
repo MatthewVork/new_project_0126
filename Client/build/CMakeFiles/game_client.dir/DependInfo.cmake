@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/game/chess_logic.c" "CMakeFiles/game_client.dir/game/chess_logic.c.o" "gcc" "CMakeFiles/game_client.dir/game/chess_logic.c.o.d"
+  "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/game/board_view.c" "CMakeFiles/game_client.dir/game/board_view.c.o" "gcc" "CMakeFiles/game_client.dir/game/board_view.c.o.d"
   "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/lv_drivers/sdl/sdl.c" "CMakeFiles/game_client.dir/lv_drivers/sdl/sdl.c.o" "gcc" "CMakeFiles/game_client.dir/lv_drivers/sdl/sdl.c.o.d"
   "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/lv_drivers/sdl/sdl_common.c" "CMakeFiles/game_client.dir/lv_drivers/sdl/sdl_common.c.o" "gcc" "CMakeFiles/game_client.dir/lv_drivers/sdl/sdl_common.c.o.d"
   "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/lv_drivers/sdl/sdl_gpu.c" "CMakeFiles/game_client.dir/lv_drivers/sdl/sdl_gpu.c.o" "gcc" "CMakeFiles/game_client.dir/lv_drivers/sdl/sdl_gpu.c.o.d"
@@ -209,6 +209,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/mnt/c/Users/Matthew/Desktop/new_project_0126/Common/cJson.c" "CMakeFiles/game_client.dir/mnt/c/Users/Matthew/Desktop/new_project_0126/Common/cJson.c.o" "gcc" "CMakeFiles/game_client.dir/mnt/c/Users/Matthew/Desktop/new_project_0126/Common/cJson.c.o.d"
   "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/network/network_client.c" "CMakeFiles/game_client.dir/network/network_client.c.o" "gcc" "CMakeFiles/game_client.dir/network/network_client.c.o.d"
   "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/components/ui_comp_hook.c" "CMakeFiles/game_client.dir/ui_generated/components/ui_comp_hook.c.o" "gcc" "CMakeFiles/game_client.dir/ui_generated/components/ui_comp_hook.c.o.d"
+  "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/images/ui_img_arrow_png.c" "CMakeFiles/game_client.dir/ui_generated/images/ui_img_arrow_png.c.o" "gcc" "CMakeFiles/game_client.dir/ui_generated/images/ui_img_arrow_png.c.o.d"
   "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/screens/ui_ScreenGame.c" "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenGame.c.o" "gcc" "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenGame.c.o.d"
   "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/screens/ui_ScreenLobby.c" "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLobby.c.o" "gcc" "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLobby.c.o.d"
   "/mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/screens/ui_ScreenLogin.c" "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLogin.c.o" "gcc" "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLogin.c.o.d"

@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/game_client.dir/game/chess_logic.c.o"
-  "CMakeFiles/game_client.dir/game/chess_logic.c.o.d"
+  "CMakeFiles/game_client.dir/game/board_view.c.o"
+  "CMakeFiles/game_client.dir/game/board_view.c.o.d"
   "CMakeFiles/game_client.dir/lv_drivers/sdl/sdl.c.o"
   "CMakeFiles/game_client.dir/lv_drivers/sdl/sdl.c.o.d"
   "CMakeFiles/game_client.dir/lv_drivers/sdl/sdl_common.c.o"
@@ -401,6 +401,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/game_client.dir/network/network_client.c.o.d"
   "CMakeFiles/game_client.dir/ui_generated/components/ui_comp_hook.c.o"
   "CMakeFiles/game_client.dir/ui_generated/components/ui_comp_hook.c.o.d"
+  "CMakeFiles/game_client.dir/ui_generated/images/ui_img_arrow_png.c.o"
+  "CMakeFiles/game_client.dir/ui_generated/images/ui_img_arrow_png.c.o.d"
   "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenGame.c.o"
   "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenGame.c.o.d"
   "CMakeFiles/game_client.dir/ui_generated/screens/ui_ScreenLobby.c.o"

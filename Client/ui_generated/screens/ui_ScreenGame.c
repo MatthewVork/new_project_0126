@@ -90,7 +90,7 @@ void ui_ScreenGame_screen_init(void)
     lv_obj_set_height(ui_ImgTurnP1, LV_SIZE_CONTENT);    /// 22
     lv_obj_set_x(ui_ImgTurnP1, 60);
     lv_obj_set_y(ui_ImgTurnP1, 45);
-    lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_ImgTurnP1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_img_set_angle(ui_ImgTurnP1, 1800);
 
@@ -101,7 +101,7 @@ void ui_ScreenGame_screen_init(void)
     lv_obj_set_x(ui_ImgTurnP2, -60);
     lv_obj_set_y(ui_ImgTurnP2, 45);
     lv_obj_set_align(ui_ImgTurnP2, LV_ALIGN_TOP_RIGHT);
-    lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_ImgTurnP2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_img_set_angle(ui_ImgTurnP2, 1800);
 

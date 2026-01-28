@@ -129,29 +129,29 @@ game_client/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/build
 .PHONY : game_client/fast
 
-game/chess_logic.o: game/chess_logic.c.o
-.PHONY : game/chess_logic.o
+game/board_view.o: game/board_view.c.o
+.PHONY : game/board_view.o
 
 # target to build an object file
-game/chess_logic.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/game/chess_logic.c.o
-.PHONY : game/chess_logic.c.o
+game/board_view.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/game/board_view.c.o
+.PHONY : game/board_view.c.o
 
-game/chess_logic.i: game/chess_logic.c.i
-.PHONY : game/chess_logic.i
+game/board_view.i: game/board_view.c.i
+.PHONY : game/board_view.i
 
 # target to preprocess a source file
-game/chess_logic.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/game/chess_logic.c.i
-.PHONY : game/chess_logic.c.i
+game/board_view.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/game/board_view.c.i
+.PHONY : game/board_view.c.i
 
-game/chess_logic.s: game/chess_logic.c.s
-.PHONY : game/chess_logic.s
+game/board_view.s: game/board_view.c.s
+.PHONY : game/board_view.s
 
 # target to generate assembly for a file
-game/chess_logic.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/game/chess_logic.c.s
-.PHONY : game/chess_logic.c.s
+game/board_view.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/game/board_view.c.s
+.PHONY : game/board_view.c.s
 
 lv_drivers/sdl/sdl.o: lv_drivers/sdl/sdl.c.o
 .PHONY : lv_drivers/sdl/sdl.o
@@ -4953,6 +4953,30 @@ ui_generated/components/ui_comp_hook.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/components/ui_comp_hook.c.s
 .PHONY : ui_generated/components/ui_comp_hook.c.s
 
+ui_generated/images/ui_img_arrow_png.o: ui_generated/images/ui_img_arrow_png.c.o
+.PHONY : ui_generated/images/ui_img_arrow_png.o
+
+# target to build an object file
+ui_generated/images/ui_img_arrow_png.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/images/ui_img_arrow_png.c.o
+.PHONY : ui_generated/images/ui_img_arrow_png.c.o
+
+ui_generated/images/ui_img_arrow_png.i: ui_generated/images/ui_img_arrow_png.c.i
+.PHONY : ui_generated/images/ui_img_arrow_png.i
+
+# target to preprocess a source file
+ui_generated/images/ui_img_arrow_png.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/images/ui_img_arrow_png.c.i
+.PHONY : ui_generated/images/ui_img_arrow_png.c.i
+
+ui_generated/images/ui_img_arrow_png.s: ui_generated/images/ui_img_arrow_png.c.s
+.PHONY : ui_generated/images/ui_img_arrow_png.s
+
+# target to generate assembly for a file
+ui_generated/images/ui_img_arrow_png.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_client.dir/build.make CMakeFiles/game_client.dir/ui_generated/images/ui_img_arrow_png.c.s
+.PHONY : ui_generated/images/ui_img_arrow_png.c.s
+
 ui_generated/screens/ui_ScreenGame.o: ui_generated/screens/ui_ScreenGame.c.o
 .PHONY : ui_generated/screens/ui_ScreenGame.o
 
@@ -5130,9 +5154,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... game_client"
-	@echo "... game/chess_logic.o"
-	@echo "... game/chess_logic.i"
-	@echo "... game/chess_logic.s"
+	@echo "... game/board_view.o"
+	@echo "... game/board_view.i"
+	@echo "... game/board_view.s"
 	@echo "... lv_drivers/sdl/sdl.o"
 	@echo "... lv_drivers/sdl/sdl.i"
 	@echo "... lv_drivers/sdl/sdl.s"
@@ -5733,6 +5757,9 @@ help:
 	@echo "... ui_generated/components/ui_comp_hook.o"
 	@echo "... ui_generated/components/ui_comp_hook.i"
 	@echo "... ui_generated/components/ui_comp_hook.s"
+	@echo "... ui_generated/images/ui_img_arrow_png.o"
+	@echo "... ui_generated/images/ui_img_arrow_png.i"
+	@echo "... ui_generated/images/ui_img_arrow_png.s"
 	@echo "... ui_generated/screens/ui_ScreenGame.o"
 	@echo "... ui_generated/screens/ui_ScreenGame.i"
 	@echo "... ui_generated/screens/ui_ScreenGame.s"

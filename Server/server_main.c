@@ -152,6 +152,14 @@ int main() {
                             strcpy(res.message, "Create Failed");
                         }
                         send(sd, &res, sizeof(res), 0);
+
+                        // 3. ★ 核心修复：延时 50ms 后再发“更新包”
+                        // 这样客户端有时间先处理跳转，且避免粘包
+                        if (rid != -1) {
+                            usleep(50000); // 等待 50ms
+                            broadcast_room_info(rid);
+                        }
+                        
                     }
                     // --- 加入房间 ---
                     else if (cmd == CMD_JOIN_ROOM) {
@@ -165,6 +173,9 @@ int main() {
                             players[i].current_room_id = req->room_id;
                             sprintf(res.message, "Joined Room %d", req->room_id);
                             send(sd, &res, sizeof(res), 0);
+
+                            usleep(50000); 
+                            broadcast_room_info(req->room_id);
 
                             // 如果满员，触发开赛广播
                             if (rooms[req->room_id].player_count == 2) {
