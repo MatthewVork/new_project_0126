@@ -95,6 +95,11 @@ typedef struct {
     uint8_t p2_ready;       // 1=已准备
 } RoomUpdatePacket;
 
+typedef struct {
+    uint8_t cmd;          // CMD_GAME_OVER
+    uint8_t winner_color; // 0:黑棋赢, 1:白棋赢, 2:对方逃跑(自动获胜)
+} GameOverPacket;
+
 #pragma pack()
 
 #endif

@@ -100,13 +100,13 @@ void ui_event_Labelreadybtninfo(lv_event_t * e);
 extern lv_obj_t * ui_Labelreadybtninfo;
 extern lv_obj_t * ui_LabelPlayer1;
 extern lv_obj_t * ui_LabelPlayer2;
-extern lv_obj_t * ui_BoardContainer;
 extern lv_obj_t * ui_ImgTurnP1;
 extern lv_obj_t * ui_ImgTurnP2;
 extern lv_obj_t * ui_PanelStartTip;
 extern lv_obj_t * ui_Panel8;
 extern lv_obj_t * ui_Label15;
-extern lv_obj_t * ui_Image1;
+extern lv_obj_t * ui_ImageBoard;
+extern lv_obj_t * ui_BoardContainer;
 extern lv_obj_t * ui____initial_actions0;
 
 

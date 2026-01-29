@@ -2,15 +2,20 @@
 #define GAME_CONFIG_H
 
 // 围棋逻辑参数
+#define BOARD_SIZE 19      
+#define COLOR_BLACK 0      
+#define COLOR_WHITE 1      
 
-#define COLOR_BLACK 0      // 黑棋代号
-#define COLOR_WHITE 1      // 白棋代号
-
-// 修改 game_config.h
-#define BOARD_SIZE 19
+// ★★★ UI 绘图参数 (基于 385x385 网格精准修正) ★★★
 #define GRID_WIDTH 440
-#define CELL_SIZE  22      // 固定格子大小
-#define STONE_SIZE 20      // 棋子直径，稍微大一点好看
-#define BOARD_PADDING 22   // (440 - 18*22) / 2 = 22，让网格在容器里完美居中
+
+// 核心修正 1: 精确的格子间距 (385 / 18)
+#define CELL_SIZE  21.3889f  
+
+// 核心修正 2: 精确的起始偏移 ( (440 - 385) / 2 )
+#define BOARD_PADDING 27.5f  
+
+// 棋子直径 (20像素比较合适，不会显得太挤)
+#define STONE_SIZE 20     
 
 #endif

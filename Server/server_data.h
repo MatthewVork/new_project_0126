@@ -23,20 +23,22 @@ typedef struct {
     int current_room_id;    // 当前所在的房间ID (-1表示不在房间)
 } Player;
 
-// 房间结构体 (围棋版)
+// 房间结构体
 typedef struct {
     int room_id;
     int player_count;
     int status; // 0=Wait, 2=Playing
     
-    // 玩家位置: white=白棋(P2), black=黑棋(P1/房主)
+    // 玩家位置
     int white_player_idx;   
     int black_player_idx;
     int white_ready;
     int black_ready;
 
-    // ★★★ 核心新增：每个房间都有自己独立的棋盘 ★★★
-    int8_t board[19][19];   // -1=空, 0=黑, 1=白
+    // ★★★ 建议修改这里 ★★★
+    // 0:空, 1:黑(BLACK), 2:白(WHITE) —— 这样 memset(0) 就是清空
+    int board[19][19];   
+    
     uint8_t current_turn;   // 0=黑方回合, 1=白方回合
 } Room;
 

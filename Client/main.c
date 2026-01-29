@@ -130,7 +130,13 @@ int main(void)
     lv_indev_set_group(kb_indev, g);
 
     // --- UI 初始化 ---
-    ui_init(); 
+    ui_init();
+    
+    if (ui_BoardContainer) {
+        lv_obj_set_style_pad_all(ui_BoardContainer, 0, 0);       // 清除内边距
+        lv_obj_set_style_border_width(ui_BoardContainer, 0, 0);  // 清除边框
+    }
+    // --- 键盘导航绑定 ---
     if(ui_InputUser) lv_group_add_obj(g, ui_InputUser);
     if(ui_InputPass) lv_group_add_obj(g, ui_InputPass);
     if(ui_BtnLogin)  lv_group_add_obj(g, ui_BtnLogin);

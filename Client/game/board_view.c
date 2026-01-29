@@ -1,7 +1,8 @@
 #include "board_view.h"
 #include <stdio.h>
+#include <math.h> // 数学库，用于精确转换
 
-// 画子
+// 1. 修正后的落子绘图函数
 void board_view_draw_stone(lv_obj_t *parent, int x, int y, int color) {
     if (!parent) return;
 
@@ -10,79 +11,56 @@ void board_view_draw_stone(lv_obj_t *parent, int x, int y, int color) {
     lv_obj_set_style_radius(stone, LV_RADIUS_CIRCLE, 0); 
     lv_obj_set_style_border_width(stone, 0, 0);          
     
+    // 设置颜色
     if (color == COLOR_BLACK) {
         lv_obj_set_style_bg_color(stone, lv_color_hex(0x000000), 0);
     } else {
         lv_obj_set_style_bg_color(stone, lv_color_hex(0xFFFFFF), 0);
     }
 
-    // 计算坐标
-    int pos_x = BOARD_PADDING + x * CELL_SIZE - STONE_SIZE / 2;
-    int pos_y = BOARD_PADDING + y * CELL_SIZE - STONE_SIZE / 2;
+    // ★★★ 核心修正：浮点数计算中心坐标 ★★★
+    // 逻辑：偏移量 + (格子索引 * 间距) - 半径修正
+    float fx = BOARD_PADDING + (float)x * CELL_SIZE - (float)STONE_SIZE / 2.0f;
+    float fy = BOARD_PADDING + (float)y * CELL_SIZE - (float)STONE_SIZE / 2.0f;
     
-    lv_obj_set_pos(stone, pos_x, pos_y);
+    // 四舍五入转为整数 (+0.5f 技巧)
+    lv_obj_set_pos(stone, (int)(fx + 0.5f), (int)(fy + 0.5f));
     lv_obj_clear_flag(stone, LV_OBJ_FLAG_SCROLLABLE); 
 }
 
-// 清盘
+// 清盘函数 (保持不变)
 void board_view_clear(lv_obj_t *parent) {
     if (!parent) return;
     lv_obj_clean(parent);
 }
 
-// 在你的坐标转换函数中修改
+// 2. 修正后的点击检测函数
 bool board_view_get_click_xy(lv_obj_t * obj, int * x_out, int * y_out) {
     lv_indev_t * indev = lv_indev_get_act();
     lv_point_t point;
-    lv_indev_get_point(indev, &point);
+    lv_indev_get_point(indev, &point); 
 
-    // 1. 转换到容器内坐标
+    // --- 第一步：计算容器内的相对像素坐标 ---
+    // 你的棋盘容器偏移：X=180, Y=20 (如果以后改了UI布局，这里要跟着改)
     int local_x = point.x - 180; 
     int local_y = point.y - 20;
 
-    // 2. 减去边距，计算相对于第一条线的偏移
-    int grid_x = local_x - BOARD_PADDING;
-    int grid_y = local_y - BOARD_PADDING;
+    // --- 第二步：反向推算网格坐标 (必须用 float) ---
+    // 公式：(点击位置 - 边距) / 单格大小
+    float fx = ((float)local_x - BOARD_PADDING) / CELL_SIZE;
+    float fy = ((float)local_y - BOARD_PADDING) / CELL_SIZE;
 
-    // 3. 使用相同的 CELL_SIZE (22) 进行换算
-    int gx = (int)((grid_x / (float)CELL_SIZE) + 0.5f);
-    int gy = (int)((grid_y / (float)CELL_SIZE) + 0.5f);
+    // --- 第三步：四舍五入取整 ---
+    // 比如算出 3.9，四舍五入就是 4；算出 3.1，就是 3
+    int gx = (int)(fx + 0.5f);
+    int gy = (int)(fy + 0.5f);
 
-    if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE) return false;
+    // --- 第四步：合法性检查 ---
+    if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE) {
+        return false; // 点到棋盘外面去了
+    }
 
     *x_out = gx;
     *y_out = gy;
     return true;
-}
-
-// 在 board_view.c 中新增：绘制棋盘网格
-void board_view_draw_grid(lv_obj_t *parent) {
-    if (!parent) return;
-    
-    static lv_style_t style_line;
-    lv_style_init(&style_line);
-    lv_style_set_line_width(&style_line, 1);
-    lv_style_set_line_color(&style_line, lv_color_hex(0x000000)); // 黑线
-
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        // 画横线
-        lv_obj_t * h_line = lv_line_create(parent);
-        static lv_point_t h_points[2];
-        h_points[0].x = BOARD_PADDING;
-        h_points[0].y = BOARD_PADDING + i * CELL_SIZE;
-        h_points[1].x = BOARD_PADDING + (BOARD_SIZE-1) * CELL_SIZE;
-        h_points[1].y = BOARD_PADDING + i * CELL_SIZE;
-        lv_line_set_points(h_line, h_points, 2);
-        lv_obj_add_style(h_line, &style_line, 0);
-
-        // 画竖线
-        lv_obj_t * v_line = lv_line_create(parent);
-        static lv_point_t v_points[2];
-        v_points[0].x = BOARD_PADDING + i * CELL_SIZE;
-        v_points[0].y = BOARD_PADDING;
-        v_points[1].x = BOARD_PADDING + i * CELL_SIZE;
-        v_points[1].y = BOARD_PADDING + (BOARD_SIZE-1) * CELL_SIZE;
-        lv_line_set_points(v_line, v_points, 2);
-        lv_obj_add_style(v_line, &style_line, 0);
-    }
 }

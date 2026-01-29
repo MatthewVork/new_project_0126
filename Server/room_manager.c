@@ -135,36 +135,81 @@ int join_room_logic(int room_id, int player_idx) {
     }
 }
 
-// 6. 离开房间逻辑
+// 6. 离开房间逻辑 (含逃跑判负)
 int leave_room_logic(int room_id, int player_idx) {
     if (room_id < 0 || room_id >= MAX_ROOMS) return 0;
     Room *r = &rooms[room_id];
+
+    // 1. 先记录谁走了，谁是剩下的（用于后面判胜负）
+    int is_black_leaving = 0;
 
     // 找到玩家并移除
     if (r->black_player_idx == player_idx) {
         r->black_player_idx = -1;
         r->black_ready = 0;
+        is_black_leaving = 1; // 标记走的是黑棋
     } else if (r->white_player_idx == player_idx) {
         r->white_player_idx = -1;
         r->white_ready = 0;
+        is_black_leaving = 0; // 标记走的是白棋
     } else {
-        return 0; // 不在这个房间
+        return 0; // 不在这个房间，直接返回
     }
 
     r->player_count--;
     
-    // 如果没人了，重置房间
+    // 2. 如果房间没人了，直接重置回收
     if (r->player_count <= 0) {
         r->player_count = 0;
         r->status = 0;
+        // 清理残留数据
+        r->black_player_idx = -1;
+        r->white_player_idx = -1;
+        r->black_ready = 0;
+        r->white_ready = 0;
+        memset(r->board, 0, sizeof(r->board));
         printf("[Room] 房间 %d 已清空回收\n", room_id);
-    } else {
-        // 如果还有人，强制结束游戏
+    } 
+    else {
+        // 3. ★★★ 重点：如果还有人，且游戏正在进行 (status == 2) -> 判逃跑！ ★★★
         if (r->status == 2) {
-            r->status = 0;
-            printf("[Room] 房间 %d 游戏因有人退出而强制结束\n", room_id);
+            printf("[Room] 房间 %d 游戏中有人退出，触发逃跑判负逻辑！\n", room_id);
+            
+            // 找出剩下的那个倒霉蛋（赢家）
+            int winner_idx = -1;
+            int winner_color = -1;
+
+            if (is_black_leaving) { 
+                // 黑棋跑了 -> 白棋赢
+                winner_idx = r->white_player_idx;
+                winner_color = 1; 
+            } else {
+                // 白棋跑了 -> 黑棋赢
+                winner_idx = r->black_player_idx;
+                winner_color = 0; 
+            }
+
+            // 发送游戏结束包给赢家
+            if (winner_idx != -1) {
+                GameOverPacket pkt;
+                pkt.cmd = CMD_GAME_OVER;
+                pkt.winner_color = winner_color; // 告诉他你赢了
+                
+                // 也可以定义一个特殊值比如 2，代表"对方逃跑"，客户端显示"对方掉线，你赢了"
+                // 这里我们直接复用 winner_color，算正常获胜
+                
+                send(players[winner_idx].socket_fd, &pkt, sizeof(pkt), 0);
+                printf("[Room] 通知玩家 %s 不战而胜 (对手逃跑)\n", players[winner_idx].username);
+            }
+
+            // 强制结束游戏状态
+            r->status = 0; // 回到等待状态
+            r->black_ready = 0;
+            r->white_ready = 0;
+            memset(r->board, 0, sizeof(r->board)); // 清盘
         }
-        // 通知剩下的那个人
+
+        // 4. 广播房间最新状态 (有人走了，或者游戏结束回到了大厅)
         broadcast_room_info(room_id);
     }
     return 1;
@@ -187,44 +232,92 @@ void handle_ready_toggle(int room_id, int player_idx, int is_ready) {
     broadcast_room_info(room_id);
 }
 
-// 8. ★★★ 处理围棋落子 (核心逻辑) ★★★
-void handle_place_stone(int room_id, int player_idx, int x, int y) {
-    if (room_id < 0 || room_id >= MAX_ROOMS) return;
-    Room *r = &rooms[room_id];
+// --- 辅助函数：判断五子连珠 ---
+// 返回 1 表示获胜，0 表示没赢
+int check_win(int rid, int x, int y, int player_color) {
+    // 这里的 player_color 是协议里的 0(黑) 或 1(白)
+    // 我们要把它转换成存储在 board 里的 1(黑) 或 2(白)
+    int target_val = player_color + 1; 
 
-    // (1) 必须在游戏中
-    if (r->status != 2) return;
+    // 四个方向：横、竖、右斜(\)、左斜(/)
+    int directions[4][2] = { {1, 0}, {0, 1}, {1, 1}, {1, -1} };
 
-    // (2) 必须轮到该玩家
-    // 黑方(P1)对应颜色0, 白方(P2)对应颜色1
-    int my_color = (r->black_player_idx == player_idx) ? 0 : 1;
-    
-    if (my_color != r->current_turn) {
-        printf("[Game] 拒绝: 玩家 %s 还没轮到你 (当前轮到: %d)\n", players[player_idx].username, r->current_turn);
-        return; 
+    for (int d = 0; d < 4; d++) {
+        int count = 1; // 算上当前这一子
+        int dx = directions[d][0];
+        int dy = directions[d][1];
+
+        // 1. 正向检查 (最多查4格)
+        for (int i = 1; i < 5; i++) {
+            int nx = x + i * dx;
+            int ny = y + i * dy;
+            // 检查边界 + 检查颜色是否一致
+            if (nx >= 0 && nx < 19 && ny >= 0 && ny < 19 && 
+                rooms[rid].board[nx][ny] == target_val) {
+                count++;
+            } else {
+                break;
+            }
+        }
+
+        // 2. 反向检查 (最多查4格)
+        for (int i = 1; i < 5; i++) {
+            int nx = x - i * dx;
+            int ny = y - i * dy;
+            if (nx >= 0 && nx < 19 && ny >= 0 && ny < 19 && 
+                rooms[rid].board[nx][ny] == target_val) {
+                count++;
+            } else {
+                break;
+            }
+        }
+
+        // 3. 结算
+        if (count >= 5) return 1; // 赢了！
     }
+    return 0; // 没赢
+}
 
-    // (3) 坐标合法性检查
-    if (x < 0 || x >= 19 || y < 0 || y >= 19) return;
-    if (r->board[y][x] != -1) {
-        printf("[Game] 拒绝: 位置 (%d, %d) 已有子\n", x, y);
-        return;
-    }
-
-    // (4) 执行落子
-    r->board[y][x] = my_color;          // 记录到服务器内存
-    r->current_turn = !r->current_turn; // 切换回合 (0->1, 1->0)
-
-    // (5) 广播结果给房间里的两个人
-    StonePacket pkt;
-    memset(&pkt, 0, sizeof(pkt));
-    pkt.cmd = CMD_PLACE_STONE; // 0x31
-    pkt.x = x;
-    pkt.y = y;
-    pkt.color = my_color;
-
-    if (r->black_player_idx != -1) send(players[r->black_player_idx].socket_fd, &pkt, sizeof(pkt), 0);
-    if (r->white_player_idx != -1) send(players[r->white_player_idx].socket_fd, &pkt, sizeof(pkt), 0);
+// 8. 处理落子逻辑
+void handle_place_stone(int rid, int player_idx, int x, int y) {
+    if (rid < 0 || rid >= MAX_ROOMS) return;
     
-    printf("[Game] 房间 %d 落子成功: (%d, %d) 颜色:%d\n", room_id, x, y, my_color);
+    // 1. 确定落子颜色
+    int color = (players[player_idx].socket_fd == players[rooms[rid].black_player_idx].socket_fd) ? 0 : 1;
+    
+    // 2. 记录到服务器棋盘
+    rooms[rid].board[x][y] = color + 1;
+
+    // 3. ★★★ 修正这里：把 MovePacket 改成 StonePacket ★★★
+    // (编译器提示你原来的定义叫 StonePacket)
+    StonePacket move_pkt; 
+    move_pkt.cmd = 0x31; // CMD_MOVE
+    move_pkt.x = x;
+    move_pkt.y = y;
+    move_pkt.color = color;
+    
+    // 给房间内两人发包
+    int p1 = rooms[rid].black_player_idx;
+    int p2 = rooms[rid].white_player_idx;
+    if(p1 != -1) send(players[p1].socket_fd, &move_pkt, sizeof(move_pkt), 0);
+    if(p2 != -1) send(players[p2].socket_fd, &move_pkt, sizeof(move_pkt), 0);
+
+    // 4. 检查获胜 (代码保持不变)
+    if (check_win(rid, x, y, color)) {
+        printf("[Server] 房间 %d 结束，获胜者颜色: %d\n", rid, color);
+        
+        GameOverPacket over_pkt;
+        over_pkt.cmd = CMD_GAME_OVER;
+        over_pkt.winner_color = color;
+
+        if(p1 != -1) send(players[p1].socket_fd, &over_pkt, sizeof(over_pkt), 0);
+        if(p2 != -1) send(players[p2].socket_fd, &over_pkt, sizeof(over_pkt), 0);
+
+        // 重置房间
+        rooms[rid].status = 0; 
+        rooms[rid].black_ready = 0;
+        rooms[rid].white_ready = 0;
+        memset(rooms[rid].board, 0, sizeof(rooms[rid].board));
+        broadcast_room_info(rid);
+    }
 }
