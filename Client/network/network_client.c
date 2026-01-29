@@ -8,6 +8,8 @@
 #include <errno.h>
 
 #include "network_client.h"
+#include "../Common/game_protocol.h"
+#include "../Common/cJSON.h" // ★★★ 必须引入 cJSON ★★★
 
 static int sock_fd = -1;
 
@@ -38,7 +40,7 @@ int net_init(const char* server_ip, int port) {
     return 0;
 }
 
-// --- 发送函数 ---
+// --- 旧的二进制发送函数 (保持不变) ---
 void net_send_login(const char* username, const char* password) {
     AuthPacket pkt;
     memset(&pkt, 0, sizeof(pkt));
@@ -59,7 +61,6 @@ void net_send_register(const char* username, const char* password) {
     printf("[Net] Sent Register: %s\n", username);
 }
 
-// 新增：退出登录
 void net_send_logout() {
     uint8_t cmd = CMD_LOGOUT;
     send_raw(&cmd, 1);
@@ -82,29 +83,58 @@ void net_send_join_room(int room_id) {
     send_raw(&pkt, sizeof(pkt));
 }
 
+void net_send_get_room_list() {
+    uint8_t cmd = CMD_GET_ROOM_LIST;
+    send_raw(&cmd, 1);
+    printf("[Net] 请求刷新房间列表...\n");
+}
+
+void net_send_leave_room() {
+    uint8_t cmd = CMD_LEAVE_ROOM; 
+    send_raw(&cmd, 1); 
+    printf("[Net] 发送离开房间请求...\n");
+}
+
+// ★★★ 新增：发送落子指令 (JSON版) ★★★
+void net_send_place_stone_json(int x, int y, int color) {
+    // 1. 创建 JSON 对象
+    cJSON *root = cJSON_CreateObject();
+    
+    // 2. 添加字段
+    cJSON_AddStringToObject(root, KEY_CMD, CMD_STR_PLACE_STONE); // "cmd": "place_stone"
+    cJSON_AddNumberToObject(root, KEY_X, x);
+    cJSON_AddNumberToObject(root, KEY_Y, y);
+    cJSON_AddNumberToObject(root, KEY_COLOR, color);
+
+    // 3. 转换成字符串 (例如: {"cmd":"place_stone","x":3,"y":4,"color":0})
+    char *json_str = cJSON_PrintUnformatted(root);
+    
+    // 4. 发送字符串
+    if (json_str) {
+        printf("[Net-JSON] 发送落子: %s\n", json_str);
+        send_raw(json_str, strlen(json_str));
+        free(json_str); // 记得释放字符串内存
+    }
+
+    // 5. 销毁对象
+    cJSON_Delete(root);
+}
+
 // --- 接收函数 ---
 int net_poll(uint8_t* out_pkt_buffer) {
     if (sock_fd < 0) return 0;
-    int len = recv(sock_fd, out_pkt_buffer, 1024, 0);
-    if (len > 0) return len;
+    
+    // 这里为了演示简单，直接读。在真实复杂场景下 JSON 最好用 \n 分隔。
+    int len = recv(sock_fd, out_pkt_buffer, 1023, 0);
+    
+    if (len > 0) {
+        // ★ 关键：手动添加字符串结束符，防止 cJSON 解析越界
+        if (len < 1024) out_pkt_buffer[len] = '\0'; 
+        return len;
+    }
     if (len == 0) {
         close(sock_fd);
         sock_fd = -1;
     }
     return 0;
-}
-
-void net_send_get_room_list() {
-    // 不需要带数据，只要发个命令头就行
-    uint8_t cmd = CMD_GET_ROOM_LIST;
-    send_raw(&cmd, 1);
-    printf("[Net] 请求刷新房间列表...\n");
-    printf("[Debug] UI 刷新按钮被点击了，准备发送网络包...\n");
-}
-
-void net_send_leave_room() {
-    // 使用协议中定义的命令字（假设你已在 game_protocol.h 定义为 0x25）
-    uint8_t cmd = CMD_LEAVE_ROOM; 
-    send_raw(&cmd, 1); // 发送 1 字节的命令请求
-    printf("[Net] 发送离开房间请求...\n");
 }
