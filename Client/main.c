@@ -6,102 +6,90 @@
 #include <pthread.h>
 #include <time.h>
 #include <stdio.h>
+#include <sys/socket.h> 
 #include "../Common/game_protocol.h" 
 
-// ★★★ 新增：引入游戏绘图模块 ★★★
+// 引入游戏绘图模块
 #include "game/game_config.h"
 #include "game/board_view.h"
 
-#define WINDOW_WIDTH  800
-#define WINDOW_HEIGHT 480
-
-// --- 全局游戏状态 ---
+// --- 全局变量 ---
 extern bool is_player_ready;
 int my_game_color = -1;     // 0=黑(Black), 1=白(White)
 int current_game_turn = 0;  // 当前轮到谁 (0=黑, 1=白)
 lv_timer_t * game_reset_timer = NULL;
 
+// 全局名字缓存
+char p1_name_cache[32] = "";
+char p2_name_cache[32] = "";
+
+#define WINDOW_WIDTH  800
+#define WINDOW_HEIGHT 480
+
 // --- 前置声明 ---
 void hide_all_popups();
+void timer_reset_game(lv_timer_t * timer); 
+extern void send_raw(void *data, int len); // 声明 network_client.c 里的函数
 
-// --- 定时器回调：3秒后自动执行 ---
+// --- 强制刷新标签函数 ---
+void ui_reset_labels_to_waiting() {
+    if (ui_LabelPlayer1) {
+        lv_label_set_recolor(ui_LabelPlayer1, true);
+        if (p1_name_cache[0] != '\0') lv_label_set_text_fmt(ui_LabelPlayer1, "Host: %s\n#ffff00 [WAITING]#", p1_name_cache);
+        else lv_label_set_text(ui_LabelPlayer1, "Host: ...\n#ffff00 [WAITING]#");
+    }
+    if (ui_LabelPlayer2) {
+        lv_label_set_recolor(ui_LabelPlayer2, true);
+        if (p2_name_cache[0] != '\0') lv_label_set_text_fmt(ui_LabelPlayer2, "Player: %s\n#ffff00 [WAITING]#", p2_name_cache);
+        else lv_label_set_text(ui_LabelPlayer2, "Player: ...\n#ffff00 [WAITING]#");
+    }
+}
+
+// --- 定时器回调 ---
 void timer_reset_game(lv_timer_t * timer) {
-    printf("[UI] 自动重置房间状态...\n");
-
-    // 1. 隐藏胜负面板 (不管开了哪个，都关掉)
-    // 确保你的 ui.h 里已经有这两个对象了，如果没有请先从 SLS 导出代码
     if (ui_PanelMatchWin) lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
     if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
-
     if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
     if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
-
-    // 2. 清理棋盘 (把棋子全删了)
-    board_view_clear(ui_BoardContainer);
-
-    // 3. 恢复“准备”按钮 (让玩家可以点 Ready)
-    // 根据你之前的代码，按钮名字可能是 ui_Button5
+    if(ui_BoardContainer) board_view_clear(ui_BoardContainer);
     if (ui_Button5) lv_obj_clear_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
     if (ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready?");
-
-    // 4. 重置本地准备状态
-    // 注意：你需要确保 is_player_ready 变量在这里能访问到
-    // 如果它是 ui_events.c 里的 static 变量，你需要去那里加个函数重置它，或者简单粗暴地让玩家重新点一次
     game_reset_timer = NULL;
 }
 
-// --- 【新增功能】更新 UI 上的箭头指示 ---
 void update_turn_ui() {
     if (!ui_ImgTurnP1 || !ui_ImgTurnP2) return;
-
-    if (current_game_turn == COLOR_BLACK) {
-        // 轮到黑棋 (P1)
+    if (current_game_turn == 0) { 
         lv_obj_clear_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN); 
         lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);   
-        printf("[UI] 轮到黑方 (P1) -> 显示左箭头\n");
-    } else {
-        // 轮到白棋 (P2)
+    } else { 
         lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);   
         lv_obj_clear_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN); 
-        printf("[UI] 轮到白方 (P2) -> 显示右箭头\n");
     }
 }
 
-// --- 【新增功能】3秒后自动隐藏“游戏开始”面板 ---
 void timer_hide_start_panel(lv_timer_t * timer) {
-    if (ui_PanelStartTip) {
-        lv_obj_add_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
-        printf("[UI] 游戏开始提示已自动关闭\n");
-    }
+    if (ui_PanelStartTip) lv_obj_add_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
 }
 
-// --- 【新增功能】棋盘点击事件 ---
+// --- 事件处理 ---
 void event_board_click_handler(lv_event_t * e) {
-    if (my_game_color != current_game_turn) {
-        printf("[Game] 还没轮到你！当前轮到: %d, 你是: %d\n", current_game_turn, my_game_color);
-        return;
-    }
+    if (my_game_color != current_game_turn) return;
     int x, y;
     if (board_view_get_click_xy(e->target, &x, &y)) {
         StonePacket pkt;
         pkt.cmd = CMD_PLACE_STONE;
-        pkt.x = x;
-        pkt.y = y;
-        pkt.color = my_game_color; 
+        pkt.x = x; pkt.y = y; pkt.color = my_game_color; 
         send_raw(&pkt, sizeof(pkt));
-        printf("[Game] 请求落子: (%d, %d)\n", x, y);
     }
 }
 
-// --- 【原有逻辑】点击房间卡片 ---
 void event_join_room_handler(lv_event_t * e) {
     lv_obj_t * item = lv_event_get_target(e);
     int room_id = (int)(intptr_t)lv_obj_get_user_data(item);
-    printf("[UI] 玩家点击了房间 #%d，正在发送加入请求...\n", room_id);
     net_send_join_room(room_id);
 }
 
-// --- 【原有逻辑】定时器回调函数 ---
 void timer_reg_success_callback(lv_timer_t * timer) {
     hide_all_popups();
     _ui_screen_change(&ui_ScreenLogin, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLogin_screen_init);
@@ -111,11 +99,8 @@ void timer_login_success_callback(lv_timer_t * timer) {
     _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLobby_screen_init);
     net_send_get_room_list(); 
 }
-void timer_close_popup_callback(lv_timer_t * timer) {
-    hide_all_popups(); 
-}
+void timer_close_popup_callback(lv_timer_t * timer) { hide_all_popups(); }
 
-// --- 【原有逻辑】隐藏所有弹窗 ---
 void hide_all_popups() {
     if(ui_PanelLoginSuccess) lv_obj_add_flag(ui_PanelLoginSuccess, LV_OBJ_FLAG_HIDDEN);
     if(ui_PanelLoginFail)    lv_obj_add_flag(ui_PanelLoginFail, LV_OBJ_FLAG_HIDDEN);
@@ -130,7 +115,7 @@ int main(void)
     lv_init();
     sdl_init();
 
-    // --- 【原有逻辑】驱动部分 ---
+    // 驱动初始化
     static lv_disp_draw_buf_t disp_buf;
     static lv_color_t buf[WINDOW_WIDTH * WINDOW_HEIGHT / 10];
     lv_disp_draw_buf_init(&disp_buf, buf, NULL, WINDOW_WIDTH * WINDOW_HEIGHT / 10);
@@ -157,28 +142,21 @@ int main(void)
     lv_group_set_default(g);
     lv_indev_set_group(kb_indev, g);
 
-    // --- UI 初始化 ---
     ui_init();
     
     if (ui_BoardContainer) {
-        lv_obj_set_style_pad_all(ui_BoardContainer, 0, 0);       // 清除内边距
-        lv_obj_set_style_border_width(ui_BoardContainer, 0, 0);  // 清除边框
+        lv_obj_set_style_pad_all(ui_BoardContainer, 0, 0);       
+        lv_obj_set_style_border_width(ui_BoardContainer, 0, 0);  
+        lv_obj_add_event_cb(ui_BoardContainer, event_board_click_handler, LV_EVENT_CLICKED, NULL);
     }
-    // --- 键盘导航绑定 ---
     if(ui_InputUser) lv_group_add_obj(g, ui_InputUser);
     if(ui_InputPass) lv_group_add_obj(g, ui_InputPass);
     if(ui_BtnLogin)  lv_group_add_obj(g, ui_BtnLogin);
 
-    // ★★★ 新增：绑定棋盘点击 ★★★
-    if (ui_BoardContainer) {
-        lv_obj_add_event_cb(ui_BoardContainer, event_board_click_handler, LV_EVENT_CLICKED, NULL);
-    }
-    // ★★★ 新增：初始化箭头隐藏 ★★★
     if(ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
     if(ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
 
-    // --- 网络初始化 ---
-    if (net_init("127.0.0.1", 8888) != 0) {
+    if (net_init("172.24.139.145", 8888) != 0) {
         printf("Connect failed\n");
         return -1;
     }
@@ -190,210 +168,176 @@ int main(void)
         int len = net_poll(buffer);
 
         if (len > 0) {
-            uint8_t cmd = buffer[0];
+            int offset = 0;
+            // ★★★ 核心修复：循环解析所有包！不再丢包！ ★★★
+            while (offset < len) {
+                uint8_t cmd = buffer[offset];
+                int packet_len = 0;
+                uint8_t* pData = buffer + offset;
 
-            // 模块 1: 【原有逻辑】登录/注册
-            if (cmd == CMD_AUTH_RESULT) {
-                ResultPacket* res = (ResultPacket*)buffer;
-                if (lv_scr_act() == ui_ScreenRegister) {
-                    hide_all_popups(); 
-                    if (res->success) {
-                        if(ui_PanelRegSuccess) lv_obj_clear_flag(ui_PanelRegSuccess, LV_OBJ_FLAG_HIDDEN);
-                        lv_timer_set_repeat_count(lv_timer_create(timer_reg_success_callback, 1500, NULL), 1);
-                    } else {
-                        if (strstr(res->message, "Exist") || strstr(res->message, "Repeat")) {
-                            if(ui_PanelRegRepeat) lv_obj_clear_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
+                // 根据 cmd 计算包长度，防止越界读取
+                if (cmd == CMD_AUTH_RESULT) packet_len = sizeof(ResultPacket);
+                else if (cmd == CMD_ROOM_LIST_RES) {
+                    int count = buffer[offset + 1];
+                    packet_len = 2 + count * sizeof(RoomInfo);
+                }
+                else if (cmd == CMD_ROOM_RESULT) packet_len = sizeof(ResultPacket);
+                else if (cmd == CMD_ROOM_UPDATE) packet_len = sizeof(RoomUpdatePacket);
+                else if (cmd == CMD_GAME_START) packet_len = sizeof(GameStartPacket);
+                else if (cmd == CMD_PLACE_STONE) packet_len = sizeof(StonePacket);
+                else if (cmd == CMD_GAME_OVER) packet_len = sizeof(GameOverPacket);
+                else {
+                    printf("未知指令: %d, 跳过剩余数据\n", cmd);
+                    break;
+                }
+
+                if (offset + packet_len > len) {
+                    printf("数据包不完整，丢弃\n");
+                    break;
+                }
+
+                // --- 处理逻辑开始 ---
+                if (cmd == CMD_AUTH_RESULT) {
+                    ResultPacket* res = (ResultPacket*)pData;
+                    if (lv_scr_act() == ui_ScreenRegister) {
+                        hide_all_popups(); 
+                        if (res->success) {
+                            if(ui_PanelRegSuccess) lv_obj_clear_flag(ui_PanelRegSuccess, LV_OBJ_FLAG_HIDDEN);
+                            lv_timer_set_repeat_count(lv_timer_create(timer_reg_success_callback, 1500, NULL), 1);
                         } else {
-                            if(ui_PanelRegFail) lv_obj_clear_flag(ui_PanelRegFail, LV_OBJ_FLAG_HIDDEN);
+                            if (strstr(res->message, "Exist") || strstr(res->message, "Repeat")) {
+                                if(ui_PanelRegRepeat) lv_obj_clear_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
+                            } else {
+                                if(ui_PanelRegFail) lv_obj_clear_flag(ui_PanelRegFail, LV_OBJ_FLAG_HIDDEN);
+                            }
+                            lv_timer_set_repeat_count(lv_timer_create(timer_close_popup_callback, 1500, NULL), 1);
                         }
-                        lv_timer_set_repeat_count(lv_timer_create(timer_close_popup_callback, 1500, NULL), 1);
-                    }
-                }
-                else if (lv_scr_act() == ui_ScreenLogin) {
-                    hide_all_popups();
-                    if (res->success) {
-                        if(ui_PanelLoginSuccess) lv_obj_clear_flag(ui_PanelLoginSuccess, LV_OBJ_FLAG_HIDDEN);
-                        lv_timer_set_repeat_count(lv_timer_create(timer_login_success_callback, 1500, NULL), 1);
-                    } else {
-                        if (strstr(res->message, "Repeat") || strstr(res->message, "already")) {
-                            if(ui_PanelLoginRepeat) lv_obj_clear_flag(ui_PanelLoginRepeat, LV_OBJ_FLAG_HIDDEN);
+                    } else if (lv_scr_act() == ui_ScreenLogin) {
+                        hide_all_popups();
+                        if (res->success) {
+                            if(ui_PanelLoginSuccess) lv_obj_clear_flag(ui_PanelLoginSuccess, LV_OBJ_FLAG_HIDDEN);
+                            lv_timer_set_repeat_count(lv_timer_create(timer_login_success_callback, 1500, NULL), 1);
                         } else {
-                            if(ui_PanelLoginFail) lv_obj_clear_flag(ui_PanelLoginFail, LV_OBJ_FLAG_HIDDEN);
+                            if (strstr(res->message, "Repeat") || strstr(res->message, "already")) {
+                                if(ui_PanelLoginRepeat) lv_obj_clear_flag(ui_PanelLoginRepeat, LV_OBJ_FLAG_HIDDEN);
+                            } else {
+                                if(ui_PanelLoginFail) lv_obj_clear_flag(ui_PanelLoginFail, LV_OBJ_FLAG_HIDDEN);
+                            }
+                            lv_timer_set_repeat_count(lv_timer_create(timer_close_popup_callback, 1500, NULL), 1);
                         }
-                        lv_timer_set_repeat_count(lv_timer_create(timer_close_popup_callback, 1500, NULL), 1);
                     }
                 }
-            }
-            
-            // 模块 2: 【原有逻辑】房间列表刷新
-            else if (cmd == CMD_ROOM_LIST_RES) {
-                int count = buffer[1];
-                RoomInfo *rooms = (RoomInfo*)(buffer + 2);
-                uint32_t child_cnt = lv_obj_get_child_cnt(ui_PanelRoomContainer);
-                for(int i = child_cnt - 1; i >= 0; i--) {
-                    lv_obj_t * child = lv_obj_get_child(ui_PanelRoomContainer, i);
-                    if (child != ui_PanelRoomTemplate) lv_obj_del(child);
-                }
-                for(int i=0; i<count; i++) {
-                    lv_obj_t * item = lv_obj_create(ui_PanelRoomContainer);
-                    // 你原来的样式设置
-                    lv_obj_set_size(item, 260, 120);
-                    lv_obj_set_style_bg_color(item, lv_color_hex(0x404040), 0);
-                    lv_obj_set_style_border_width(item, 2, 0);
-                    lv_obj_set_style_radius(item, 10, 0);
-                    lv_obj_set_user_data(item, (void*)(intptr_t)rooms[i].room_id);
+                else if (cmd == CMD_ROOM_LIST_RES) {
+                    int count = pData[1];
+                    RoomInfo *rooms = (RoomInfo*)(pData + 2);
+                    uint32_t child_cnt = lv_obj_get_child_cnt(ui_PanelRoomContainer);
+                    for(int i = child_cnt - 1; i >= 0; i--) {
+                        lv_obj_t * child = lv_obj_get_child(ui_PanelRoomContainer, i);
+                        if (child != ui_PanelRoomTemplate) lv_obj_del(child);
+                    }
+                    for(int i=0; i<count; i++) {
+                        lv_obj_t * item = lv_obj_create(ui_PanelRoomContainer);
+                        lv_obj_set_size(item, 260, 120);
+                        lv_obj_set_style_bg_color(item, lv_color_hex(0x404040), 0);
+                        lv_obj_set_style_border_width(item, 2, 0);
+                        lv_obj_set_style_radius(item, 10, 0);
+                        lv_obj_set_user_data(item, (void*)(intptr_t)rooms[i].room_id);
 
-                    lv_obj_t * label = lv_label_create(item);
-                    lv_label_set_text_fmt(label, "Room #%d\n%s", rooms[i].room_id, rooms[i].status==0?"Wait":"Play");
-                    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-                    
-                    // 你原来的状态颜色逻辑
-                    lv_obj_t * label_stat = lv_label_create(item);
-                    if(rooms[i].status == 0) {
-                         lv_label_set_text_fmt(label_stat, "Waiting (%d/2)", rooms[i].player_count);
-                         lv_obj_set_style_text_color(label_stat, lv_color_hex(0x00FF00), 0);
+                        lv_obj_t * label = lv_label_create(item);
+                        lv_label_set_text_fmt(label, "Room #%d\n%s", rooms[i].room_id, rooms[i].status==0?"Wait":"Play");
+                        lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+                        
+                        lv_obj_t * label_stat = lv_label_create(item);
+                        if(rooms[i].status == 0) {
+                            lv_label_set_text_fmt(label_stat, "Waiting (%d/2)", rooms[i].player_count);
+                            lv_obj_set_style_text_color(label_stat, lv_color_hex(0x00FF00), 0);
+                        } else {
+                            lv_label_set_text(label_stat, "Playing (2/2)");
+                            lv_obj_set_style_text_color(label_stat, lv_color_hex(0xFF0000), 0);
+                        }
+                        lv_obj_align(label_stat, LV_ALIGN_BOTTOM_MID, 0, -15);
+                        lv_obj_add_event_cb(item, event_join_room_handler, LV_EVENT_CLICKED, NULL);
+                    }
+                }
+                else if (cmd == CMD_ROOM_RESULT) {
+                    ResultPacket* res = (ResultPacket*)pData;
+                    if (res->success) {
+                        printf("[UI] 房间操作成功: %s\n", res->message);
+                        if (strstr(res->message, "Left")) {
+                            _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
+                            net_send_get_room_list(); 
+                        } else {
+                            if (lv_scr_act() != ui_ScreenGame) {
+                                _ui_screen_change(&ui_ScreenGame, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenGame_screen_init);
+                                if(ui_BoardContainer) board_view_clear(ui_BoardContainer); 
+                            }
+                        }
                     } else {
-                         lv_label_set_text(label_stat, "Playing (2/2)");
-                         lv_obj_set_style_text_color(label_stat, lv_color_hex(0xFF0000), 0);
+                        printf("[UI] 房间操作失败: %s\n", res->message);
                     }
-                    lv_obj_align(label_stat, LV_ALIGN_BOTTOM_MID, 0, -15);
-                    
-                    lv_obj_add_event_cb(item, event_join_room_handler, LV_EVENT_CLICKED, NULL);
                 }
-            }
-
-            // 模块 3: 【原有逻辑】房间操作结果 (创建、加入、离开)
-            else if (cmd == CMD_ROOM_RESULT) {
-                ResultPacket* res = (ResultPacket*)buffer;
-                if (res->success) {
-                    printf("[UI] 房间操作成功: %s\n", res->message);
-
-                    // A: 在大厅 -> 进房成功 (Create 或 Join)
-                    if (lv_scr_act() == ui_ScreenLobby) {
-                        _ui_screen_change(&ui_ScreenGame, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenGame_screen_init);
-                        if(ui_BoardContainer) board_view_clear(ui_BoardContainer); // 顺手清盘
-                    } 
-                    // B: 在房间 -> 退房成功 (Leave)
-                    else if (lv_scr_act() == ui_ScreenGame) {
-                        _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
-                        net_send_get_room_list(); // 刷新列表
-                    }
-                } else {
-                    printf("[UI] 房间操作失败: %s\n", res->message);
-                }
-            }
-
-            // 模块 4: 【原有逻辑】房间状态更新
-            else if (cmd == CMD_ROOM_UPDATE) {
-                RoomUpdatePacket *pkt = (RoomUpdatePacket*)buffer;
-                
-                if (lv_scr_act() == ui_ScreenGame) {
-                    // 更新房主 (P1) 状态
-                    if (pkt->p1_state && ui_LabelPlayer1) {
+                else if (cmd == CMD_ROOM_UPDATE) {
+                    RoomUpdatePacket *pkt = (RoomUpdatePacket*)pData;
+                    if (ui_LabelPlayer1) {
                         lv_label_set_recolor(ui_LabelPlayer1, true);
-                        // 根据服务器传来的 p1_ready 决定显示什么，不再依赖你有没有按按钮
-                        lv_label_set_text_fmt(ui_LabelPlayer1, "Host: %s\n%s", 
-                            pkt->p1_name, 
-                            pkt->p1_ready ? "#00ff00 [READY]#" : "#ffff00 [WAITING]#");
+                        if (pkt->p1_state == 1) {
+                            strncpy(p1_name_cache, pkt->p1_name, 31); 
+                            lv_label_set_text_fmt(ui_LabelPlayer1, "Host: %s\n%s", pkt->p1_name, pkt->p1_ready ? "#00ff00 [READY]#" : "#ffff00 [WAITING]#");
+                        } else {
+                            p1_name_cache[0] = '\0';
+                            lv_label_set_text(ui_LabelPlayer1, "Host: [EMPTY]\n#808080 [OFFLINE]#");
+                        }
                     }
-                    
-                    // 更新挑战者 (P2) 状态
-                    if (pkt->p2_state && ui_LabelPlayer2) {
+                    if (ui_LabelPlayer2) {
                         lv_label_set_recolor(ui_LabelPlayer2, true);
-                        lv_label_set_text_fmt(ui_LabelPlayer2, "Player: %s\n%s", 
-                            pkt->p2_name, 
-                            pkt->p2_ready ? "#00ff00 [READY]#" : "#ffff00 [WAITING]#");
+                        if (pkt->p2_state == 1) {
+                            strncpy(p2_name_cache, pkt->p2_name, 31);
+                            lv_label_set_text_fmt(ui_LabelPlayer2, "Player: %s\n%s", pkt->p2_name, pkt->p2_ready ? "#00ff00 [READY]#" : "#ffff00 [WAITING]#");
+                        } else {
+                            p2_name_cache[0] = '\0';
+                            lv_label_set_text(ui_LabelPlayer2, "Waiting for\nPlayer...");
+                        }
                     }
                 }
-            }
-
-            // -----------------------------------------------------------
-            // ★★★ 处理游戏开始 (包含强制清理旧数据逻辑) ★★★
-            // -----------------------------------------------------------
-            else if (cmd == CMD_GAME_START) {
-                GameStartPacket *pkt = (GameStartPacket*)buffer;
-                
-                // 1. 存下自己的颜色 (重要！后面判输赢要用)
-                my_game_color = pkt->your_color;
-                printf("[Game] 收到开始信号! 我是: %s (ID:%d)\n", 
-                       (my_game_color == 0) ? "黑棋" : "白棋", my_game_color);
-
-                if (game_reset_timer) {
-                    lv_timer_del(game_reset_timer);
-                    game_reset_timer = NULL;
-                }
-
-                // 2. ★★★ 核心修复：强制大扫除 ★★★
-                // 不管上一局怎么退出的，先把棋盘清空，保证这局是干净的
-                if (ui_BoardContainer) {
-                    board_view_clear(ui_BoardContainer);
-                }
-
-                // 3. 强制隐藏所有“结算面板”
-                // (防止上一局的“胜利/失败”弹窗还卡在屏幕上)
-                if (ui_PanelMatchWin) lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
-                if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
-                
-                // 4. 强制隐藏“下棋指示箭头”
-                // (刚开局还没轮到谁下，或者为了界面整洁，先藏起来)
-                if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
-                if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
-
-                // 5. 重置准备状态
-                is_player_ready = false; 
-                // 恢复按钮文字为 "Ready?" (为下一局做准备)
-                if(ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready?");
-
-                if (ui_PanelStartTip) {
-                    // 1. 显示面板
-                    lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
-                    // 2. 把它拉到最上层 (防止被棋盘挡住)
-                    lv_obj_move_foreground(ui_PanelStartTip);
-                    
-                    // 3. 启动定时器：1.5秒后自动关闭这个提示
-                    // (前提是你代码里已经有了 timer_hide_start_panel 这个函数)
-                    lv_timer_t * t = lv_timer_create(timer_hide_start_panel, 1500, NULL);
-                    lv_timer_set_repeat_count(t, 1);
-                }
-                
-                // 7. 游戏开始了，把“准备”按钮藏起来 (游戏中不能点准备)
-                if (ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
-            }
-
-            // ★★★ 模块 6: 【新增】收到落子 (绘图+切回合) ★★★
-            else if (cmd == CMD_PLACE_STONE) {
-                StonePacket *pkt = (StonePacket*)buffer;
-                // 画子
-                board_view_draw_stone(ui_BoardContainer, pkt->x, pkt->y, pkt->color);
-                // 切换回合
-                current_game_turn = !current_game_turn;
-                // 更新箭头显示
-                update_turn_ui();
-            }
-
-            else if (cmd == CMD_GAME_OVER) {
-                GameOverPacket *pkt = (GameOverPacket*)buffer;
-                printf("[Client] 收到游戏结束信号，获胜者: %d\n", pkt->winner_color);
-                printf("========== [DEBUG] 收到 CMD_GAME_OVER 信号 ==========\n");
-
-                // 1. 判断输赢并显示对应面板
-                if (pkt->winner_color == my_game_color) {
-                    // ★ 我赢了：显示胜利面板
-                    if (ui_PanelMatchWin) {
-                        lv_obj_clear_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
-                        lv_obj_move_foreground(ui_PanelMatchWin); // 顶层显示
+                else if (cmd == CMD_GAME_START) {
+                    GameStartPacket *pkt = (GameStartPacket*)pData;
+                    my_game_color = pkt->your_color;
+                    if (game_reset_timer) { lv_timer_del(game_reset_timer); game_reset_timer = NULL; }
+                    if (ui_BoardContainer) board_view_clear(ui_BoardContainer);
+                    if (ui_PanelMatchWin) lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
+                    if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
+                    if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
+                    if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
+                    is_player_ready = false; 
+                    if(ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready?");
+                    if (ui_PanelStartTip) {
+                        lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
+                        lv_obj_move_foreground(ui_PanelStartTip);
+                        lv_timer_set_repeat_count(lv_timer_create(timer_hide_start_panel, 1500, NULL), 1);
                     }
-                } else {
-                    // ★ 我输了：显示失败面板
-                    if (ui_PanelMatchLoss) {
-                        lv_obj_clear_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
-                        lv_obj_move_foreground(ui_PanelMatchLoss); // 顶层显示
+                    if (ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
+                }
+                else if (cmd == CMD_PLACE_STONE) {
+                    StonePacket *pkt = (StonePacket*)pData;
+                    board_view_draw_stone(ui_BoardContainer, pkt->x, pkt->y, pkt->color);
+                    current_game_turn = !current_game_turn;
+                    update_turn_ui();
+                }
+                else if (cmd == CMD_GAME_OVER) {
+                    GameOverPacket *pkt = (GameOverPacket*)pData;
+                    if (pkt->winner_color == my_game_color) {
+                        if (ui_PanelMatchWin) { lv_obj_clear_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN); lv_obj_move_foreground(ui_PanelMatchWin); }
+                    } else {
+                        if (ui_PanelMatchLoss) { lv_obj_clear_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN); lv_obj_move_foreground(ui_PanelMatchLoss); }
                     }
+                    ui_reset_labels_to_waiting();
+                    if (game_reset_timer) lv_timer_del(game_reset_timer);
+                    game_reset_timer = lv_timer_create(timer_reset_game, 3000, NULL);
+                    lv_timer_set_repeat_count(game_reset_timer, 1);
                 }
 
-                if (game_reset_timer) lv_timer_del(game_reset_timer); // 先删旧的
-                game_reset_timer = lv_timer_create(timer_reset_game, 3000, NULL); // 创建新的给全局变量
-                lv_timer_set_repeat_count(game_reset_timer, 1);
+                // 移动偏移量，处理下一个包
+                offset += packet_len;
             }
         }
         usleep(5000); 

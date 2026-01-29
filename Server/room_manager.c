@@ -91,20 +91,18 @@ int create_room_logic(int player_idx) {
         if (rooms[i].player_count == 0) {
             rooms[i].player_count = 1;
             rooms[i].status = 0;
-            
-            // 创建者默认为黑方(P1)
             rooms[i].black_player_idx = player_idx;
             rooms[i].white_player_idx = -1;
-            
-            // 重置状态
             rooms[i].black_ready = 0;
             rooms[i].white_ready = 0;
             memset(rooms[i].board, -1, sizeof(rooms[i].board));
 
             printf("[Room] 玩家 %s (ID:%d) 创建了房间 %d\n", players[player_idx].username, player_idx, i);
             
-            // 立即广播，让房主看到自己的名字
-            //broadcast_room_info(i);
+            // ★★★ 只加 0.1秒，既不会觉得卡，又能保证不粘包 ★★★
+            usleep(100000); 
+            broadcast_room_info(i); 
+            
             return i;
         }
     }
@@ -116,22 +114,20 @@ int join_room_logic(int room_id, int player_idx) {
     if (room_id < 0 || room_id >= MAX_ROOMS) return 0;
     if (rooms[room_id].player_count >= 2) return 0;
 
-    // 只要有空位就加入
     if (rooms[room_id].player_count == 0) {
         return create_room_logic(player_idx);
     } else {
         rooms[room_id].player_count++;
-        
         // 自动补位
-        if (rooms[room_id].black_player_idx == -1) {
-            rooms[room_id].black_player_idx = player_idx;
-        } else {
-            rooms[room_id].white_player_idx = player_idx;
-        }
+        if (rooms[room_id].black_player_idx == -1) rooms[room_id].black_player_idx = player_idx;
+        else rooms[room_id].white_player_idx = player_idx;
         
         printf("[Room] 玩家 %s 加入房间 %d\n", players[player_idx].username, room_id);
         
-        //broadcast_room_info(room_id);
+        // ★★★ 同样只加 0.1秒 ★★★
+        usleep(100000);
+        broadcast_room_info(room_id);
+        
         return 1;
     }
 }
@@ -141,76 +137,51 @@ int leave_room_logic(int room_id, int player_idx) {
     if (room_id < 0 || room_id >= MAX_ROOMS) return 0;
     Room *r = &rooms[room_id];
 
-    // 1. 先记录谁走了，谁是剩下的（用于后面判胜负）
     int is_black_leaving = 0;
-
-    // 找到玩家并移除
+    // 移除玩家逻辑
     if (r->black_player_idx == player_idx) {
         r->black_player_idx = -1;
         r->black_ready = 0;
-        is_black_leaving = 1; // 标记走的是黑棋
+        is_black_leaving = 1;
     } else if (r->white_player_idx == player_idx) {
         r->white_player_idx = -1;
         r->white_ready = 0;
-        is_black_leaving = 0; // 标记走的是白棋
+        is_black_leaving = 0;
     } else {
-        return 0; // 不在这个房间，直接返回
+        return 0;
     }
 
     r->player_count--;
     
-    // 2. 如果房间没人了，直接重置回收
+    // 房间空了重置
     if (r->player_count <= 0) {
         r->player_count = 0;
         r->status = 0;
-        // 清理残留数据
         r->black_player_idx = -1;
         r->white_player_idx = -1;
         r->black_ready = 0;
         r->white_ready = 0;
         memset(r->board, 0, sizeof(r->board));
         printf("[Room] 房间 %d 已清空回收\n", room_id);
-    } 
-    else {
-        // 3. ★★★ 重点：如果还有人，且游戏正在进行 (status == 2) -> 判逃跑！ ★★★
+    } else {
+        // 游戏中有人逃跑
         if (r->status == 2) {
-            printf("[Room] 房间 %d 游戏中有人退出，触发逃跑判负逻辑！\n", room_id);
-            
-            // 找出剩下的那个倒霉蛋（赢家）
-            int winner_idx = -1;
-            int winner_color = -1;
-
-            if (is_black_leaving) { 
-                // 黑棋跑了 -> 白棋赢
-                winner_idx = r->white_player_idx;
-                winner_color = 1; 
-            } else {
-                // 白棋跑了 -> 黑棋赢
-                winner_idx = r->black_player_idx;
-                winner_color = 0; 
-            }
-
-            // 发送游戏结束包给赢家
+            int winner_idx = is_black_leaving ? r->white_player_idx : r->black_player_idx;
+            int winner_color = is_black_leaving ? 1 : 0;
             if (winner_idx != -1) {
                 GameOverPacket pkt;
                 pkt.cmd = CMD_GAME_OVER;
-                pkt.winner_color = winner_color; // 告诉他你赢了
-                
-                // 也可以定义一个特殊值比如 2，代表"对方逃跑"，客户端显示"对方掉线，你赢了"
-                // 这里我们直接复用 winner_color，算正常获胜
-                
+                pkt.winner_color = winner_color;
                 send(players[winner_idx].socket_fd, &pkt, sizeof(pkt), 0);
-                printf("[Room] 通知玩家 %s 不战而胜 (对手逃跑)\n", players[winner_idx].username);
             }
-
-            // 强制结束游戏状态
-            r->status = 0; // 回到等待状态
+            r->status = 0; 
             r->black_ready = 0;
             r->white_ready = 0;
-            memset(r->board, 0, sizeof(r->board)); // 清盘
+            memset(r->board, 0, sizeof(r->board)); 
+            usleep(200000); // 判负稍微多一点点延时没关系
         }
-
-        // 4. 广播房间最新状态 (有人走了，或者游戏结束回到了大厅)
+        
+        // ★★★ 重点：必须广播！让剩下的人看到对方变成了 Waiting ★★★
         broadcast_room_info(room_id);
     }
     return 1;
@@ -229,7 +200,7 @@ void handle_ready_toggle(int room_id, int player_idx, int is_ready) {
     } else if (r->white_player_idx == player_idx) {
         r->white_ready = is_ready;
     }
-    
+    usleep(100000); 
     broadcast_room_info(room_id);
 }
 
