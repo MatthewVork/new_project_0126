@@ -16,11 +16,39 @@
 #define WINDOW_HEIGHT 480
 
 // --- 全局游戏状态 ---
+extern bool is_player_ready;
 int my_game_color = -1;     // 0=黑(Black), 1=白(White)
 int current_game_turn = 0;  // 当前轮到谁 (0=黑, 1=白)
+lv_timer_t * game_reset_timer = NULL;
 
 // --- 前置声明 ---
 void hide_all_popups();
+
+// --- 定时器回调：3秒后自动执行 ---
+void timer_reset_game(lv_timer_t * timer) {
+    printf("[UI] 自动重置房间状态...\n");
+
+    // 1. 隐藏胜负面板 (不管开了哪个，都关掉)
+    // 确保你的 ui.h 里已经有这两个对象了，如果没有请先从 SLS 导出代码
+    if (ui_PanelMatchWin) lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
+    if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
+
+    if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
+    if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
+
+    // 2. 清理棋盘 (把棋子全删了)
+    board_view_clear(ui_BoardContainer);
+
+    // 3. 恢复“准备”按钮 (让玩家可以点 Ready)
+    // 根据你之前的代码，按钮名字可能是 ui_Button5
+    if (ui_Button5) lv_obj_clear_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
+    if (ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready?");
+
+    // 4. 重置本地准备状态
+    // 注意：你需要确保 is_player_ready 变量在这里能访问到
+    // 如果它是 ui_events.c 里的 static 变量，你需要去那里加个函数重置它，或者简单粗暴地让玩家重新点一次
+    game_reset_timer = NULL;
+}
 
 // --- 【新增功能】更新 UI 上的箭头指示 ---
 void update_turn_ui() {
@@ -279,47 +307,57 @@ int main(void)
                 }
             }
 
-            // ★★★ 模块 5: 游戏开始 (疯狂调试版) ★★★
+            // -----------------------------------------------------------
+            // ★★★ 处理游戏开始 (包含强制清理旧数据逻辑) ★★★
+            // -----------------------------------------------------------
             else if (cmd == CMD_GAME_START) {
                 GameStartPacket *pkt = (GameStartPacket*)buffer;
+                
+                // 1. 存下自己的颜色 (重要！后面判输赢要用)
                 my_game_color = pkt->your_color;
-                current_game_turn = COLOR_BLACK;
+                printf("[Game] 收到开始信号! 我是: %s (ID:%d)\n", 
+                       (my_game_color == 0) ? "黑棋" : "白棋", my_game_color);
 
-                printf("\n========== [DEBUG] 1. 收到 CMD_GAME_START 信号 ==========\n");
+                if (game_reset_timer) {
+                    lv_timer_del(game_reset_timer);
+                    game_reset_timer = NULL;
+                }
 
-                // 1. 清盘
-                if(ui_BoardContainer) {
+                // 2. ★★★ 核心修复：强制大扫除 ★★★
+                // 不管上一局怎么退出的，先把棋盘清空，保证这局是干净的
+                if (ui_BoardContainer) {
                     board_view_clear(ui_BoardContainer);
-                    printf("[DEBUG] 2. 棋盘已清理\n");
                 }
-                update_turn_ui(); 
 
-                // 2. 隐藏按钮
-                if(ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
+                // 3. 强制隐藏所有“结算面板”
+                // (防止上一局的“胜利/失败”弹窗还卡在屏幕上)
+                if (ui_PanelMatchWin) lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
+                if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
+                
+                // 4. 强制隐藏“下棋指示箭头”
+                // (刚开局还没轮到谁下，或者为了界面整洁，先藏起来)
+                if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
+                if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
 
-                // 3. 显示弹窗 (重头戏)
+                // 5. 重置准备状态
+                is_player_ready = false; 
+                // 恢复按钮文字为 "Ready?" (为下一局做准备)
+                if(ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready?");
+
                 if (ui_PanelStartTip) {
-                    printf("[DEBUG] 3. 找到 ui_PanelStartTip 控件，准备执行显示命令...\n");
-
-                    // 动作 A: 置顶
-                    lv_obj_move_foreground(ui_PanelStartTip);
-                    printf("[DEBUG] 4. >> 已执行 Move Foreground (置顶)\n");
-                    
-                    // 动作 B: 解除隐藏
+                    // 1. 显示面板
                     lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
-                    printf("[DEBUG] 5. >> 已执行 Clear Hidden (解除隐藏) <<<<<<<<<<< \n");
+                    // 2. 把它拉到最上层 (防止被棋盘挡住)
+                    lv_obj_move_foreground(ui_PanelStartTip);
                     
-                    // 动作 C: 强制重绘
-                    lv_obj_invalidate(ui_PanelStartTip);
-                    printf("[DEBUG] 6. >> 已执行 Invalidate (强制重绘)\n");
-
-                    // 启动定时器
-                    lv_timer_set_repeat_count(lv_timer_create(timer_hide_start_panel, 3000, NULL), 1);
-                    
-                    printf("========== [DEBUG] 7. 【成功执行】所有显示代码已跑完！ ==========\n\n");
-                } else {
-                    printf("========== [ERROR] 严重错误：ui_PanelStartTip 是空的(NULL)！ ==========\n");
+                    // 3. 启动定时器：1.5秒后自动关闭这个提示
+                    // (前提是你代码里已经有了 timer_hide_start_panel 这个函数)
+                    lv_timer_t * t = lv_timer_create(timer_hide_start_panel, 1500, NULL);
+                    lv_timer_set_repeat_count(t, 1);
                 }
+                
+                // 7. 游戏开始了，把“准备”按钮藏起来 (游戏中不能点准备)
+                if (ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
             }
 
             // ★★★ 模块 6: 【新增】收到落子 (绘图+切回合) ★★★
@@ -331,6 +369,31 @@ int main(void)
                 current_game_turn = !current_game_turn;
                 // 更新箭头显示
                 update_turn_ui();
+            }
+
+            else if (cmd == CMD_GAME_OVER) {
+                GameOverPacket *pkt = (GameOverPacket*)buffer;
+                printf("[Client] 收到游戏结束信号，获胜者: %d\n", pkt->winner_color);
+                printf("========== [DEBUG] 收到 CMD_GAME_OVER 信号 ==========\n");
+
+                // 1. 判断输赢并显示对应面板
+                if (pkt->winner_color == my_game_color) {
+                    // ★ 我赢了：显示胜利面板
+                    if (ui_PanelMatchWin) {
+                        lv_obj_clear_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
+                        lv_obj_move_foreground(ui_PanelMatchWin); // 顶层显示
+                    }
+                } else {
+                    // ★ 我输了：显示失败面板
+                    if (ui_PanelMatchLoss) {
+                        lv_obj_clear_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
+                        lv_obj_move_foreground(ui_PanelMatchLoss); // 顶层显示
+                    }
+                }
+
+                if (game_reset_timer) lv_timer_del(game_reset_timer); // 先删旧的
+                game_reset_timer = lv_timer_create(timer_reset_game, 3000, NULL); // 创建新的给全局变量
+                lv_timer_set_repeat_count(game_reset_timer, 1);
             }
         }
         usleep(5000); 

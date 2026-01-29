@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "server_data.h"
 #include "../Common/game_protocol.h"
 
@@ -302,6 +303,8 @@ void handle_place_stone(int rid, int player_idx, int x, int y) {
     if(p1 != -1) send(players[p1].socket_fd, &move_pkt, sizeof(move_pkt), 0);
     if(p2 != -1) send(players[p2].socket_fd, &move_pkt, sizeof(move_pkt), 0);
 
+    usleep(50000);
+
     // 4. 检查获胜 (代码保持不变)
     if (check_win(rid, x, y, color)) {
         printf("[Server] 房间 %d 结束，获胜者颜色: %d\n", rid, color);
@@ -312,6 +315,8 @@ void handle_place_stone(int rid, int player_idx, int x, int y) {
 
         if(p1 != -1) send(players[p1].socket_fd, &over_pkt, sizeof(over_pkt), 0);
         if(p2 != -1) send(players[p2].socket_fd, &over_pkt, sizeof(over_pkt), 0);
+
+        usleep(50000);
 
         // 重置房间
         rooms[rid].status = 0; 

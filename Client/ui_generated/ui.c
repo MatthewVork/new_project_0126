@@ -107,6 +107,12 @@ lv_obj_t * ui_Panel8;
 lv_obj_t * ui_Label15;
 lv_obj_t * ui_ImageBoard;
 lv_obj_t * ui_BoardContainer;
+lv_obj_t * ui_PanelMatchWin;
+lv_obj_t * ui_Panel9;
+lv_obj_t * ui_Label18;
+lv_obj_t * ui_PanelMatchLoss;
+lv_obj_t * ui_Panel10;
+lv_obj_t * ui_Label19;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////

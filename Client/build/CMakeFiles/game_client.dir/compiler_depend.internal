@@ -29313,6 +29313,9 @@ CMakeFiles/game_client.dir/ui_generated/ui_events.c.o
  /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/lvgl/src/widgets/lv_switch.h
  /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/lvgl/src/widgets/lv_table.h
  /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/lvgl/src/widgets/lv_textarea.h
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/lvgl/lvgl.h
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/game/board_view.h
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/game/game_config.h
  /mnt/c/Users/Matthew/Desktop/new_project_0126/Common/game_protocol.h
  /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/network/network_client.h
  /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/ui.h

@@ -107,6 +107,12 @@ extern lv_obj_t * ui_Panel8;
 extern lv_obj_t * ui_Label15;
 extern lv_obj_t * ui_ImageBoard;
 extern lv_obj_t * ui_BoardContainer;
+extern lv_obj_t * ui_PanelMatchWin;
+extern lv_obj_t * ui_Panel9;
+extern lv_obj_t * ui_Label18;
+extern lv_obj_t * ui_PanelMatchLoss;
+extern lv_obj_t * ui_Panel10;
+extern lv_obj_t * ui_Label19;
 extern lv_obj_t * ui____initial_actions0;
 
 

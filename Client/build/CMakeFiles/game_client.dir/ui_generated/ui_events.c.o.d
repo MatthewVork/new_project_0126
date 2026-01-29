@@ -269,4 +269,7 @@ CMakeFiles/game_client.dir/ui_generated/ui_events.c.o: \
  /usr/include/x86_64-linux-gnu/bits/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
  /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/../network/network_client.h \
- /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/../network/../../Common/game_protocol.h
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/../network/../../Common/game_protocol.h \
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/../game/board_view.h \
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/../game/../lvgl/lvgl.h \
+ /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/ui_generated/../game/game_config.h

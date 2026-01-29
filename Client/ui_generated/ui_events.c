@@ -3,8 +3,10 @@
 #include <string.h>
 #include <stdbool.h>
 #include "../network/network_client.h"
+#include "../game/board_view.h"
 
-static bool is_player_ready = false;
+bool is_player_ready = false;
+extern lv_timer_t * game_reset_timer;
 
 // 登录按钮
 void OnLoginClicked(lv_event_t * e)
@@ -60,14 +62,34 @@ void OnCreateRoomClicked(lv_event_t * e) {
 }
 
 // 对应你在 SLS 里给按钮设置的 Clicked 事件函数名
+// Client/ui_events.c
+
+// Client/ui_events.c
+
 void OnLeaveRoomClicked(lv_event_t * e)
 {
     printf("[UI] 玩家点击了离开房间按钮\n");
-    
-    // 1. 调用上面写好的网络函数通知服务器
     net_send_leave_room();
-    // 2. 界面跳转回大厅
-    //_ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
+
+    // ★★★ 这里的修改：增加杀定时器逻辑 ★★★
+    if (game_reset_timer) {
+        lv_timer_del(game_reset_timer);
+        game_reset_timer = NULL;
+    }
+
+    // (下面的清理代码保持不变)
+    if (ui_BoardContainer) board_view_clear(ui_BoardContainer);
+    if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
+    if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
+    if (ui_PanelMatchWin) lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
+    if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
+
+    is_player_ready = false;
+    if (ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready");
+    if (ui_Button5) lv_obj_clear_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
+
+    // 如果你想自动跳回大厅，取消下面这行的注释
+    // _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
 }
 
 void OnReadyClicked(lv_event_t * e) {

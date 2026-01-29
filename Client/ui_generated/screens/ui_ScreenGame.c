@@ -117,6 +117,48 @@ void ui_ScreenGame_screen_init(void)
     lv_obj_set_style_bg_color(ui_BoardContainer, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_BoardContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_PanelMatchWin = lv_obj_create(ui_ScreenGame);
+    lv_obj_set_width(ui_PanelMatchWin, 800);
+    lv_obj_set_height(ui_PanelMatchWin, 480);
+    lv_obj_set_align(ui_PanelMatchWin, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_PanelMatchWin, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_PanelMatchWin, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelMatchWin, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel9 = lv_obj_create(ui_PanelMatchWin);
+    lv_obj_set_width(ui_Panel9, 100);
+    lv_obj_set_height(ui_Panel9, 50);
+    lv_obj_set_align(ui_Panel9, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel9, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label18 = lv_label_create(ui_Panel9);
+    lv_obj_set_width(ui_Label18, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label18, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label18, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label18, "You Win!");
+
+    ui_PanelMatchLoss = lv_obj_create(ui_ScreenGame);
+    lv_obj_set_width(ui_PanelMatchLoss, 800);
+    lv_obj_set_height(ui_PanelMatchLoss, 480);
+    lv_obj_set_align(ui_PanelMatchLoss, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_PanelMatchLoss, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_PanelMatchLoss, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel10 = lv_obj_create(ui_PanelMatchLoss);
+    lv_obj_set_width(ui_Panel10, 100);
+    lv_obj_set_height(ui_Panel10, 50);
+    lv_obj_set_align(ui_Panel10, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel10, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label19 = lv_label_create(ui_Panel10);
+    lv_obj_set_width(ui_Label19, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label19, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label19, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label19, "You Lose!");
+
     lv_obj_add_event_cb(ui_Button4, ui_event_Button4, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Labelreadybtninfo, ui_event_Labelreadybtninfo, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Button5, ui_event_Button5, LV_EVENT_ALL, NULL);
