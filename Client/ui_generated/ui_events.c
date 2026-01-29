@@ -7,6 +7,7 @@
 
 bool is_player_ready = false;
 extern lv_timer_t * game_reset_timer;
+extern void send_raw(void *data, int len); // 声明 network_client.c 里的函数
 
 // 登录按钮
 void OnLoginClicked(lv_event_t * e)
@@ -114,4 +115,12 @@ void OnReadyClicked(lv_event_t * e) {
         
         is_player_ready = false;
     }
+}
+void Texture_clean(lv_event_t * e)
+{
+	lv_textarea_set_text(ui_InputUser, "");
+    lv_textarea_set_text(ui_InputPass, "");
+    lv_textarea_set_text(ui_RegUser, "");
+    lv_textarea_set_text(ui_RegPass, "");
+    lv_textarea_set_text(ui_RegPassConfirm, "");
 }

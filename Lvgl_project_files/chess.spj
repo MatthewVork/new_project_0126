@@ -1807,6 +1807,44 @@
                           }
                         ],
                         "InheritedType": 10
+                      },
+                      {
+                        "nid": -498429481,
+                        "strtype": "_event/action",
+                        "strval": "CALL FUNCTION",
+                        "childs": [
+                          {
+                            "nid": 794711515,
+                            "strtype": "CALL FUNCTION/Name",
+                            "strval": "CALL FUNCTION",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": 792756385,
+                            "strtype": "CALL FUNCTION/Call",
+                            "strval": "<{Function_name}>( event_struct )",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": 1055886039,
+                            "strtype": "CALL FUNCTION/CallC",
+                            "strval": "<{Function_name}>( e );",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": 1828372647,
+                            "strtype": "CALL FUNCTION/Function_name",
+                            "strval": "Texture_clean",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": 350290577,
+                            "strtype": "CALL FUNCTION/Dont_export_function",
+                            "strval": "False",
+                            "InheritedType": 2
+                          }
+                        ],
+                        "InheritedType": 10
                       }
                     ],
                     "InheritedType": 4
@@ -2443,6 +2481,44 @@
                             "nid": -485893612,
                             "strtype": "CHANGE SCREEN/Delay",
                             "InheritedType": 6
+                          }
+                        ],
+                        "InheritedType": 10
+                      },
+                      {
+                        "nid": 844570335,
+                        "strtype": "_event/action",
+                        "strval": "CALL FUNCTION",
+                        "childs": [
+                          {
+                            "nid": -1648270260,
+                            "strtype": "CALL FUNCTION/Name",
+                            "strval": "CALL FUNCTION",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": 1234749387,
+                            "strtype": "CALL FUNCTION/Call",
+                            "strval": "<{Function_name}>( event_struct )",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": -524755370,
+                            "strtype": "CALL FUNCTION/CallC",
+                            "strval": "<{Function_name}>( e );",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": -1818277276,
+                            "strtype": "CALL FUNCTION/Function_name",
+                            "strval": "Texture_clean",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": 224184592,
+                            "strtype": "CALL FUNCTION/Dont_export_function",
+                            "strval": "False",
+                            "InheritedType": 2
                           }
                         ],
                         "InheritedType": 10
@@ -7510,6 +7586,44 @@
                           }
                         ],
                         "InheritedType": 10
+                      },
+                      {
+                        "nid": -262337873,
+                        "strtype": "_event/action",
+                        "strval": "CALL FUNCTION",
+                        "childs": [
+                          {
+                            "nid": 1420817867,
+                            "strtype": "CALL FUNCTION/Name",
+                            "strval": "CALL FUNCTION",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": -1194974453,
+                            "strtype": "CALL FUNCTION/Call",
+                            "strval": "<{Function_name}>( event_struct )",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": -902161695,
+                            "strtype": "CALL FUNCTION/CallC",
+                            "strval": "<{Function_name}>( e );",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": -184499103,
+                            "strtype": "CALL FUNCTION/Function_name",
+                            "strval": "Texture_clean",
+                            "InheritedType": 10
+                          },
+                          {
+                            "nid": -1561476147,
+                            "strtype": "CALL FUNCTION/Dont_export_function",
+                            "strval": "False",
+                            "InheritedType": 2
+                          }
+                        ],
+                        "InheritedType": 10
                       }
                     ],
                     "InheritedType": 4
@@ -9228,6 +9342,44 @@
                         "nid": -462198859,
                         "strtype": "CHANGE SCREEN/Delay",
                         "InheritedType": 6
+                      }
+                    ],
+                    "InheritedType": 10
+                  },
+                  {
+                    "nid": -1900209301,
+                    "strtype": "_event/action",
+                    "strval": "CALL FUNCTION",
+                    "childs": [
+                      {
+                        "nid": -1186351255,
+                        "strtype": "CALL FUNCTION/Name",
+                        "strval": "CALL FUNCTION",
+                        "InheritedType": 10
+                      },
+                      {
+                        "nid": 1459081441,
+                        "strtype": "CALL FUNCTION/Call",
+                        "strval": "<{Function_name}>( event_struct )",
+                        "InheritedType": 10
+                      },
+                      {
+                        "nid": 813202057,
+                        "strtype": "CALL FUNCTION/CallC",
+                        "strval": "<{Function_name}>( e );",
+                        "InheritedType": 10
+                      },
+                      {
+                        "nid": -1561654292,
+                        "strtype": "CALL FUNCTION/Function_name",
+                        "strval": "Texture_clean",
+                        "InheritedType": 10
+                      },
+                      {
+                        "nid": -1588722830,
+                        "strtype": "CALL FUNCTION/Dont_export_function",
+                        "strval": "False",
+                        "InheritedType": 2
                       }
                     ],
                     "InheritedType": 10
@@ -21786,9 +21938,9 @@
     "theme_dark": false,
     "theme_color1": 5,
     "theme_color2": 0,
-    "uiExportFolderPath": "C:\\Users\\Matthew\\Desktop\\new_project_0126\\Client\\ui_generated",
+    "uiExportFolderPath": "C:\\Users\\18450\\OneDrive\\Desktop\\new_project_0126\\Client\\ui_generated",
     "projectExportFolderPath": "",
-    "backup_cnt": 61,
+    "backup_cnt": 62,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

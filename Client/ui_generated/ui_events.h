@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 void OnLoginClicked(lv_event_t * e);
+void Texture_clean(lv_event_t * e);
 void OnRegisterClicked(lv_event_t * e);
 void OnLogoutClicked(lv_event_t * e);
 void OnRefreshClicked(lv_event_t * e);

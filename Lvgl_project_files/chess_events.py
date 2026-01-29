@@ -26,3 +26,7 @@ def OnLeaveRoomClicked(event_struct):
 def OnReadyClicked(event_struct):
     return
 
+
+def Texture_clean(event_struct):
+    return
+

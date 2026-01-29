@@ -166,6 +166,7 @@ void ui_event_BtnLogin(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         OnLoginClicked(e);
+        Texture_clean(e);
     }
 }
 void ui_event_BtnToRegister1(lv_event_t * e)
@@ -174,6 +175,7 @@ void ui_event_BtnToRegister1(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         _ui_screen_change(&ui_ScreenRegister, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenRegister_screen_init);
+        Texture_clean(e);
     }
 }
 void ui_event_ScreenRegister(lv_event_t * e)
@@ -216,6 +218,7 @@ void ui_event_BtnSubmitReg(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         OnRegisterClicked(e);
+        Texture_clean(e);
     }
 }
 void ui_event_RegPassConfirm(lv_event_t * e)
@@ -233,6 +236,7 @@ void ui_event_Button1(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         _ui_screen_change(&ui_ScreenLogin, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLogin_screen_init);
+        Texture_clean(e);
     }
 }
 void ui_event_Button3(lv_event_t * e)
