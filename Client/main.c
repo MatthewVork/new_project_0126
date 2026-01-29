@@ -308,6 +308,7 @@ int main(void)
                     if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
                     if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
                     if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
+                    update_turn_ui();
                     is_player_ready = false; 
                     if(ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready?");
                     if (ui_PanelStartTip) {
