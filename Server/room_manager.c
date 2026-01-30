@@ -2,26 +2,11 @@
 #include <string.h>
 #include <stdlib.h> 
 #include <unistd.h>
-#include <netinet/in.h> // ★ 必须包含，用于 htonl
 #include "server_data.h"
 #include "../Common/game_protocol.h"
 #include "../Common/cJSON.h" 
 
 void broadcast_room_info(int room_id);
-
-// ★★★ 新增辅助函数：自动加 4字节长度头发送 ★★★
-// 这样就不用修改 server_data.h 去暴露 send_packet 了，直接在这里定义最方便
-void send_packet_wrapper(int fd, const char* json_str) {
-    if (fd <= 0 || !json_str) return;
-    
-    int len = strlen(json_str);
-    int net_len = htonl(len); // 转为网络大端序
-    
-    // 1. 先发长度
-    send(fd, &net_len, 4, 0);
-    // 2. 再发数据
-    send(fd, json_str, len, 0);
-}
 
 void init_rooms() {
     for (int i = 0; i < MAX_ROOMS; i++) {
@@ -64,9 +49,11 @@ void broadcast_room_info(int room_id) {
 
     char *str = cJSON_PrintUnformatted(root);
     if(str) {
-        // ★ 替换 send 为 send_packet_wrapper
-        if (r->black_player_idx != -1) send_packet_wrapper(players[r->black_player_idx].socket_fd, str);
-        if (r->white_player_idx != -1) send_packet_wrapper(players[r->white_player_idx].socket_fd, str);
+        int len = strlen(str);
+        if (r->black_player_idx != -1 && players[r->black_player_idx].socket_fd > 0)
+            send(players[r->black_player_idx].socket_fd, str, len, 0);
+        if (r->white_player_idx != -1 && players[r->white_player_idx].socket_fd > 0)
+            send(players[r->white_player_idx].socket_fd, str, len, 0);
         free(str);
     }
     cJSON_Delete(root); 
@@ -83,18 +70,18 @@ void broadcast_game_start(int room_id) {
     if(r->black_player_idx != -1) cJSON_AddStringToObject(root, KEY_P1_NAME, players[r->black_player_idx].username);
     if(r->white_player_idx != -1) cJSON_AddStringToObject(root, KEY_P2_NAME, players[r->white_player_idx].username);
 
-    if (r->black_player_idx != -1) {
+    if (r->black_player_idx != -1 && players[r->black_player_idx].socket_fd > 0) {
         cJSON_AddNumberToObject(root, KEY_YOUR_COLOR, 0); 
         char *str = cJSON_PrintUnformatted(root);
-        send_packet_wrapper(players[r->black_player_idx].socket_fd, str); // ★
+        send(players[r->black_player_idx].socket_fd, str, strlen(str), 0);
         free(str);
         cJSON_DeleteItemFromObject(root, KEY_YOUR_COLOR); 
     }
 
-    if (r->white_player_idx != -1) {
+    if (r->white_player_idx != -1 && players[r->white_player_idx].socket_fd > 0) {
         cJSON_AddNumberToObject(root, KEY_YOUR_COLOR, 1); 
         char *str = cJSON_PrintUnformatted(root);
-        send_packet_wrapper(players[r->white_player_idx].socket_fd, str); // ★
+        send(players[r->white_player_idx].socket_fd, str, strlen(str), 0);
         free(str);
     }
     
@@ -148,7 +135,7 @@ int leave_room_logic(int room_id, int player_idx) {
     if (r->player_count <= 0) {
         r->player_count = 0; r->status = 0; r->black_player_idx = -1; r->white_player_idx = -1;
         r->black_ready = 0; r->white_ready = 0;
-        memset(r->board, 0, sizeof(r->board));
+        memset(r->board, -1, sizeof(r->board));
     } else {
         if (r->status == 2) {
             int winner_idx = is_black_leaving ? r->white_player_idx : r->black_player_idx;
@@ -158,7 +145,8 @@ int leave_room_logic(int room_id, int player_idx) {
                 cJSON_AddStringToObject(root, KEY_CMD, CMD_STR_GAME_OVER);
                 cJSON_AddNumberToObject(root, KEY_WINNER, winner_color);
                 char *str = cJSON_PrintUnformatted(root);
-                send_packet_wrapper(players[winner_idx].socket_fd, str); // ★
+                if(players[winner_idx].socket_fd > 0)
+                    send(players[winner_idx].socket_fd, str, strlen(str), 0);
                 free(str);
                 cJSON_Delete(root);
             }
@@ -205,6 +193,7 @@ int check_win(int rid, int x, int y, int player_color) {
     return 0;
 }
 
+// 增量同步逻辑：只发送 {x, y, color}
 void handle_place_stone(int rid, int player_idx, int x, int y) {
     if (rid < 0 || rid >= MAX_ROOMS) return;
 
@@ -227,37 +216,38 @@ void handle_place_stone(int rid, int player_idx, int x, int y) {
     int p2 = rooms[rid].white_player_idx;
     
     if (json_str) {
-        // ★★★ 替换 send 为 send_packet_wrapper ★★★
-        if(p1 != -1 && players[p1].socket_fd > 0) send_packet_wrapper(players[p1].socket_fd, json_str);
-        if(p2 != -1 && players[p2].socket_fd > 0) send_packet_wrapper(players[p2].socket_fd, json_str);
+        int len = strlen(json_str);
+        if(p1 != -1 && players[p1].socket_fd > 0) {
+            send(players[p1].socket_fd, json_str, len, 0);
+        }
+        if(p2 != -1 && players[p2].socket_fd > 0) {
+            send(players[p2].socket_fd, json_str, len, 0);
+        }
         free(json_str);
     }
     cJSON_Delete(root);
 
     usleep(10000); 
 
-    // ★★★ 恢复胜负逻辑！★★★
-    // 有了长度头协议，这里绝对不会因为发包快而卡死
+    // 胜负逻辑
     if (check_win(rid, x, y, color)) {
         printf("[Server] 房间 %d 结束，获胜: %d\n", rid, color);
-        
         cJSON *over = cJSON_CreateObject();
         cJSON_AddStringToObject(over, KEY_CMD, CMD_STR_GAME_OVER);
         cJSON_AddNumberToObject(over, KEY_WINNER, color);
         char *ostr = cJSON_PrintUnformatted(over);
         if(ostr) {
-            // ★ 替换 send
-            if(p1 != -1 && players[p1].socket_fd > 0) send_packet_wrapper(players[p1].socket_fd, ostr);
-            if(p2 != -1 && players[p2].socket_fd > 0) send_packet_wrapper(players[p2].socket_fd, ostr);
+            int len = strlen(ostr);
+            if(p1 != -1 && players[p1].socket_fd > 0) send(players[p1].socket_fd, ostr, len, 0);
+            if(p2 != -1 && players[p2].socket_fd > 0) send(players[p2].socket_fd, ostr, len, 0);
             free(ostr);
         }
         cJSON_Delete(over);
-        
         usleep(50000);
         rooms[rid].status = 0; 
         rooms[rid].black_ready = 0; 
         rooms[rid].white_ready = 0;
-        memset(rooms[rid].board, -1, sizeof(rooms[rid].board)); // 注意这里我改成了 -1 初始化
+        memset(rooms[rid].board, -1, sizeof(rooms[rid].board));
         broadcast_room_info(rid);
     }
 }

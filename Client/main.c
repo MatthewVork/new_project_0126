@@ -13,11 +13,6 @@
 #include "game/game_config.h"
 #include "game/board_view.h"
 
-// --- 声明外部函数 (防止编译器警告) ---
-// 因为我们修改了 network_client.c 但没改 header，这里手动声明一下
-extern int net_recv_packet(char* out_buffer, int max_len);
-extern void net_send_place_stone_json(int x, int y, int color);
-
 // --- 全局变量 ---
 extern bool is_player_ready;
 int my_game_color = -1;     
@@ -30,11 +25,12 @@ char p2_name_cache[32] = "";
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 480
 
-// 本地棋盘缓存 (防止重复点击和越界)
+// 本地棋盘缓存
 int local_board[19][19] = {0};
 
 void hide_all_popups();
 void timer_reset_game(lv_timer_t * timer); 
+extern void net_send_place_stone_json(int x, int y, int color);
 
 // --- 辅助函数 ---
 void clear_local_board() {
@@ -94,9 +90,7 @@ void event_board_click_handler(lv_event_t * e) {
 
     int x, y;
     if (board_view_get_click_xy(e->target, &x, &y)) {
-        // 越界检查
         if (x < 0 || x >= 19 || y < 0 || y >= 19) return;
-        // 重复检查
         if (local_board[x][y] != 0) return;
 
         net_send_place_stone_json(x, y, my_game_color);
@@ -110,6 +104,7 @@ void event_join_room_handler(lv_event_t * e) {
     net_send_join_room(room_id);
 }
 
+// ★★★ 确保这些回调存在，否则登录不会跳转 ★★★
 void timer_reg_success_callback(lv_timer_t * timer) {
     hide_all_popups();
     ui_clear_auth_inputs();
@@ -118,6 +113,7 @@ void timer_reg_success_callback(lv_timer_t * timer) {
 void timer_login_success_callback(lv_timer_t * timer) {
     hide_all_popups();
     ui_clear_auth_inputs();
+    // 登录成功 -> 跳转大厅
     _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenLobby_screen_init);
     net_send_get_room_list(); 
 }
@@ -132,13 +128,13 @@ void hide_all_popups() {
     if(ui_PanelRegRepeat)    lv_obj_add_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
 }
 
-// --- 业务逻辑处理 ---
 void process_one_json(cJSON *json) {
     if (!json) return;
     cJSON *cmdItem = cJSON_GetObjectItem(json, KEY_CMD);
     if (!cmdItem || !cJSON_IsString(cmdItem)) return;
     char *cmd = cmdItem->valuestring;
 
+    // ★ 登录/注册回复逻辑 ★
     if (strcmp(cmd, CMD_STR_AUTH_RESULT) == 0) {
         cJSON *succItem = cJSON_GetObjectItem(json, KEY_SUCCESS);
         cJSON *msgItem = cJSON_GetObjectItem(json, KEY_MESSAGE);
@@ -162,6 +158,7 @@ void process_one_json(cJSON *json) {
             hide_all_popups();
             if (success) {
                 if(ui_PanelLoginSuccess) lv_obj_clear_flag(ui_PanelLoginSuccess, LV_OBJ_FLAG_HIDDEN);
+                // 触发跳转定时器
                 lv_timer_set_repeat_count(lv_timer_create(timer_login_success_callback, 1500, NULL), 1);
             } else {
                 if (strstr(msg, "Repeat") || strstr(msg, "Already")) {
@@ -209,6 +206,7 @@ void process_one_json(cJSON *json) {
             }
         }
     }
+    // ★ 进出房间回复逻辑 (含跳转) ★
     else if (strcmp(cmd, CMD_STR_ROOM_RESULT) == 0) {
         cJSON *succItem = cJSON_GetObjectItem(json, KEY_SUCCESS);
         cJSON *msgItem = cJSON_GetObjectItem(json, KEY_MESSAGE);
@@ -216,9 +214,11 @@ void process_one_json(cJSON *json) {
         char *msg = msgItem ? msgItem->valuestring : "";
         if (success) {
             if (msg && strstr(msg, "Left")) {
+                // 离开房间 -> 回大厅
                 _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
                 net_send_get_room_list(); 
             } else {
+                // 建房/进房 -> 进游戏界面
                 if (lv_scr_act() != ui_ScreenGame) {
                     _ui_screen_change(&ui_ScreenGame, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenGame_screen_init);
                     if(ui_BoardContainer) board_view_clear(ui_BoardContainer); 
@@ -279,6 +279,7 @@ void process_one_json(cJSON *json) {
         }
         if (ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
     }
+    // ★★★ 核心修复：增量落子 (只画一颗子) ★★★
     else if (strcmp(cmd, CMD_STR_PLACE_STONE) == 0) {
         cJSON *xItem = cJSON_GetObjectItem(json, KEY_X);
         cJSON *yItem = cJSON_GetObjectItem(json, KEY_Y);
@@ -288,10 +289,12 @@ void process_one_json(cJSON *json) {
             int y = yItem->valueint;
             int color = cItem->valueint;
             
-            // 更新本地数组和 UI
             if(x >=0 && x < 19 && y >= 0 && y < 19) {
+                // 1. 更新本地数据
                 local_board[x][y] = color + 1; 
+                // 2. 直接画子 (不清屏)
                 board_view_draw_stone(ui_BoardContainer, x, y, color);
+                // 3. 切换回合
                 current_game_turn = !current_game_turn;
                 update_turn_ui();
             }
@@ -324,7 +327,6 @@ int main(void)
     lv_init();
     sdl_init();
 
-    // 驱动初始化
     static lv_disp_draw_buf_t disp_buf;
     static lv_color_t buf[WINDOW_WIDTH * WINDOW_HEIGHT / 10];
     lv_disp_draw_buf_init(&disp_buf, buf, NULL, WINDOW_WIDTH * WINDOW_HEIGHT / 10);
@@ -365,33 +367,68 @@ int main(void)
     if(ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
     if(ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
 
-    // ★★★ 请务必确认这里的 IP 地址！★★★
-    // 如果是本地测试，用 "127.0.0.1"
-    // 如果是两台电脑，用服务器的局域网 IP
-    if (net_init("172.24.139.145", 8888) != 0) {
+    // ★ 请确认IP ★
+    if (net_init("172.28.17.136", 8888) != 0) {
         printf("Connect failed\n");
         return -1;
     }
 
-    // ★★★ 主循环：超级简单的接收逻辑 ★★★
-    // 只有当 net_recv_packet 读到一个完整包时，才会进来
-    // 再也不会有“半个包”的问题了
-    char temp_buf[4096];
-    
+    // ★★★ 核心：蓄水池接收逻辑 (兼容 Text-Stream 协议) ★★★
+    static uint8_t rx_buffer[10240]; 
+    static int rx_len = 0; 
+
     while(1) {
         lv_timer_handler(); 
         
-        // 尝试接收一个完整包 (非阻塞检查 + 阻塞读体)
-        if (net_recv_packet(temp_buf, 4096)) {
-            // 成功读到了一个完整 JSON！
-            cJSON *json = cJSON_Parse(temp_buf);
-            if (json) {
-                process_one_json(json);
-                cJSON_Delete(json);
+        uint8_t temp_buf[1024];
+        // 调用真实的 net_poll
+        int n = net_poll(temp_buf); 
+        
+        if (n > 0) {
+            // 拼接到蓄水池
+            if (rx_len + n < 10240) {
+                memcpy(rx_buffer + rx_len, temp_buf, n);
+                rx_len += n;
+                rx_buffer[rx_len] = '\0';
+            } else {
+                rx_len = 0; // 溢出重置
+            }
+            
+            // 循环解析
+            int parse_offset = 0;
+            while (parse_offset < rx_len) {
+                // 找 JSON 起始符
+                char *start_ptr = strchr((char*)rx_buffer + parse_offset, '{');
+                if (!start_ptr) break; 
+                
+                parse_offset = (uint8_t*)start_ptr - rx_buffer;
+                const char *end_ptr = NULL;
+                // 尝试解析
+                cJSON *json = cJSON_ParseWithOpts(start_ptr, &end_ptr, 0);
+                
+                if (json) {
+                    process_one_json(json);
+                    cJSON_Delete(json);
+                    // 移动到 JSON 结尾，继续找下一个
+                    parse_offset = (uint8_t*)end_ptr - rx_buffer;
+                } else {
+                    // 半包，等待更多数据
+                    break;
+                }
+            }
+
+            // 内存搬运：把剩下的数据移到最前面
+            if (parse_offset > 0) {
+                int remaining = rx_len - parse_offset;
+                if (remaining > 0) {
+                    memmove(rx_buffer, rx_buffer + parse_offset, remaining);
+                }
+                rx_len = remaining;
+                memset(rx_buffer + rx_len, 0, 10240 - rx_len);
             }
         }
 
-        usleep(5000); // 5ms 休息，避免 CPU 100%
+        usleep(5000); 
         lv_tick_inc(5);
     }
     return 0;
