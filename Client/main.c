@@ -8,31 +8,35 @@
 #include <stdio.h>
 #include <sys/socket.h> 
 #include "../Common/game_protocol.h" 
-#include "../Common/cJSON.h" // 必须引入 cJSON
+#include "../Common/cJSON.h" 
 
-// 引入游戏绘图模块
 #include "game/game_config.h"
 #include "game/board_view.h"
 
 // --- 全局变量 ---
 extern bool is_player_ready;
-int my_game_color = -1;     // 0=黑(Black), 1=白(White)
-int current_game_turn = 0;  // 当前轮到谁 (0=黑, 1=白)
+int my_game_color = -1;     
+int current_game_turn = 0;  
 lv_timer_t * game_reset_timer = NULL;
 
-// 全局名字缓存
 char p1_name_cache[32] = "";
 char p2_name_cache[32] = "";
 
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 480
 
-// --- 前置声明 ---
+// ★★★ 1. 本地棋盘缓存 (防止重复点击和越界) ★★★
+int local_board[19][19] = {0};
+
 void hide_all_popups();
 void timer_reset_game(lv_timer_t * timer); 
 extern void net_send_place_stone_json(int x, int y, int color);
 
-// --- 强制刷新标签函数 ---
+// --- 辅助函数 ---
+void clear_local_board() {
+    memset(local_board, 0, sizeof(local_board));
+}
+
 void ui_reset_labels_to_waiting() {
     if (ui_LabelPlayer1) {
         lv_label_set_recolor(ui_LabelPlayer1, true);
@@ -46,21 +50,22 @@ void ui_reset_labels_to_waiting() {
     }
 }
 
-// 清理输入框
 void ui_clear_auth_inputs() {
     if (ui_InputUser) lv_textarea_set_text(ui_InputUser, ""); 
     if (ui_InputPass) lv_textarea_set_text(ui_InputPass, ""); 
 }
 
-// --- 定时器回调 ---
 void timer_reset_game(lv_timer_t * timer) {
     if (ui_PanelMatchWin) lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
     if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
     if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
     if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
+    
     if(ui_BoardContainer) board_view_clear(ui_BoardContainer);
+    clear_local_board(); 
+
     if (ui_Button5) lv_obj_clear_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
-    if (ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready?");
+    if (ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready");
     game_reset_timer = NULL;
 }
 
@@ -80,13 +85,18 @@ void timer_hide_start_panel(lv_timer_t * timer) {
 }
 
 // --- 事件处理 ---
-
 void event_board_click_handler(lv_event_t * e) {
     if (my_game_color != current_game_turn) return;
+
     int x, y;
     if (board_view_get_click_xy(e->target, &x, &y)) {
+        // 越界检查
+        if (x < 0 || x >= 19 || y < 0 || y >= 19) return;
+        // 重复检查
+        if (local_board[x][y] != 0) return;
+
         net_send_place_stone_json(x, y, my_game_color);
-        printf("[Game] 点击 (%d, %d)，发送 JSON 落子请求\n", x, y);
+        printf("[Game] Sent move (%d, %d)\n", x, y);
     }
 }
 
@@ -118,22 +128,17 @@ void hide_all_popups() {
     if(ui_PanelRegRepeat)    lv_obj_add_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
 }
 
-// ★★★ 核心辅助：处理单个 JSON 逻辑 ★★★
 void process_one_json(cJSON *json) {
     if (!json) return;
-    
     cJSON *cmdItem = cJSON_GetObjectItem(json, KEY_CMD);
     if (!cmdItem || !cJSON_IsString(cmdItem)) return;
-    
     char *cmd = cmdItem->valuestring;
 
-    // 1. 登录/注册结果
     if (strcmp(cmd, CMD_STR_AUTH_RESULT) == 0) {
         cJSON *succItem = cJSON_GetObjectItem(json, KEY_SUCCESS);
         cJSON *msgItem = cJSON_GetObjectItem(json, KEY_MESSAGE);
         int success = succItem ? succItem->valueint : 0;
         char *msg = msgItem ? msgItem->valuestring : "";
-        
         if (lv_scr_act() == ui_ScreenRegister) {
             hide_all_popups(); 
             if (success) {
@@ -162,8 +167,6 @@ void process_one_json(cJSON *json) {
             }
         }
     }
-    
-    // 2. 房间列表响应
     else if (strcmp(cmd, CMD_STR_ROOM_LIST_RES) == 0) {
         cJSON *list = cJSON_GetObjectItem(json, KEY_ROOM_LIST);
         if (cJSON_IsArray(list)) {
@@ -178,18 +181,15 @@ void process_one_json(cJSON *json) {
                 int rid = cJSON_GetObjectItem(item, KEY_ROOM_ID)->valueint;
                 int p_cnt = cJSON_GetObjectItem(item, KEY_COUNT)->valueint;
                 int stat = cJSON_GetObjectItem(item, KEY_STATUS)->valueint;
-
                 lv_obj_t * room_btn = lv_obj_create(ui_PanelRoomContainer);
                 lv_obj_set_size(room_btn, 260, 120);
                 lv_obj_set_style_bg_color(room_btn, lv_color_hex(0x404040), 0);
                 lv_obj_set_style_border_width(room_btn, 2, 0);
                 lv_obj_set_style_radius(room_btn, 10, 0);
                 lv_obj_set_user_data(room_btn, (void*)(intptr_t)rid);
-
                 lv_obj_t * label = lv_label_create(room_btn);
                 lv_label_set_text_fmt(label, "Room #%d\n%s", rid, stat==0?"Wait":"Play");
                 lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-                
                 lv_obj_t * label_stat = lv_label_create(room_btn);
                 if(stat == 0) {
                     lv_label_set_text_fmt(label_stat, "Waiting (%d/2)", p_cnt);
@@ -203,43 +203,33 @@ void process_one_json(cJSON *json) {
             }
         }
     }
-
-    // 3. 房间操作结果 (重点修复：确保创建成功必进房间)
     else if (strcmp(cmd, CMD_STR_ROOM_RESULT) == 0) {
         cJSON *succItem = cJSON_GetObjectItem(json, KEY_SUCCESS);
         cJSON *msgItem = cJSON_GetObjectItem(json, KEY_MESSAGE);
         int success = succItem ? succItem->valueint : 0;
         char *msg = msgItem ? msgItem->valuestring : "";
-        
-        printf("[UI] 房间操作结果: %s (Success=%d)\n", msg, success);
         if (success) {
             if (msg && strstr(msg, "Left")) {
                 _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
                 net_send_get_room_list(); 
             } else {
-                // ★ 无论是否在 Lobby，只要成功就切到 Game
                 if (lv_scr_act() != ui_ScreenGame) {
                     _ui_screen_change(&ui_ScreenGame, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenGame_screen_init);
                     if(ui_BoardContainer) board_view_clear(ui_BoardContainer); 
+                    clear_local_board(); 
                 }
             }
-        } else {
-            printf("[UI] 操作失败: %s\n", msg);
         }
     }
-
-    // 4. 房间状态更新
     else if (strcmp(cmd, CMD_STR_ROOM_UPDATE) == 0) {
         cJSON *p1nItem = cJSON_GetObjectItem(json, KEY_P1_NAME);
         cJSON *p1rItem = cJSON_GetObjectItem(json, KEY_P1_READY);
         cJSON *p2nItem = cJSON_GetObjectItem(json, KEY_P2_NAME);
         cJSON *p2rItem = cJSON_GetObjectItem(json, KEY_P2_READY);
-
         char *p1n = p1nItem ? p1nItem->valuestring : "";
         int p1r = p1rItem ? p1rItem->valueint : 0;
         char *p2n = p2nItem ? p2nItem->valuestring : "";
         int p2r = p2rItem ? p2rItem->valueint : 0;
-
         if (ui_LabelPlayer1) {
             lv_label_set_recolor(ui_LabelPlayer1, true);
             if (strlen(p1n) > 0) {
@@ -261,25 +251,21 @@ void process_one_json(cJSON *json) {
             }
         }
     }
-
-    // 5. 游戏开始
     else if (strcmp(cmd, CMD_STR_GAME_START) == 0) {
         cJSON *colorItem = cJSON_GetObjectItem(json, KEY_YOUR_COLOR);
         my_game_color = colorItem ? colorItem->valueint : 0;
-        printf("[Game] 开始! 我是: %d\n", my_game_color);
-        
+        printf("[Game] Start! I am: %d\n", my_game_color);
         current_game_turn = 0; 
         if (game_reset_timer) { lv_timer_del(game_reset_timer); game_reset_timer = NULL; }
-        if (ui_BoardContainer) board_view_clear(ui_BoardContainer);
+        if(ui_BoardContainer) board_view_clear(ui_BoardContainer);
+        clear_local_board(); 
         if (ui_PanelMatchWin) lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
         if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
         if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
         if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
-        
         update_turn_ui(); 
         is_player_ready = false; 
         if(ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready?");
-        
         if (ui_PanelStartTip) {
             lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
             lv_obj_move_foreground(ui_PanelStartTip);
@@ -287,26 +273,27 @@ void process_one_json(cJSON *json) {
         }
         if (ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
     }
-
-    // 6. 落子
     else if (strcmp(cmd, CMD_STR_PLACE_STONE) == 0) {
         cJSON *xItem = cJSON_GetObjectItem(json, KEY_X);
         cJSON *yItem = cJSON_GetObjectItem(json, KEY_Y);
         cJSON *cItem = cJSON_GetObjectItem(json, KEY_COLOR);
-        
         if (xItem && yItem && cItem) {
-            board_view_draw_stone(ui_BoardContainer, xItem->valueint, yItem->valueint, cItem->valueint);
-            current_game_turn = !current_game_turn;
-            update_turn_ui();
+            int x = xItem->valueint;
+            int y = yItem->valueint;
+            int color = cItem->valueint;
+            // 更新本地数组和 UI
+            if(x >=0 && x < 19 && y >= 0 && y < 19) {
+                local_board[x][y] = color + 1; 
+                board_view_draw_stone(ui_BoardContainer, x, y, color);
+                current_game_turn = !current_game_turn;
+                update_turn_ui();
+            }
         }
     }
-
-    // 7. 游戏结束
     else if (strcmp(cmd, CMD_STR_GAME_OVER) == 0) {
         cJSON *winItem = cJSON_GetObjectItem(json, KEY_WINNER);
         int winner = winItem ? winItem->valueint : -1;
-        printf("[Client] 游戏结束，获胜者: %d\n", winner);
-
+        printf("[Client] Game Over, Winner: %d\n", winner);
         if (winner == my_game_color) {
             if (ui_PanelMatchWin) {
                 lv_obj_clear_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
@@ -330,7 +317,6 @@ int main(void)
     lv_init();
     sdl_init();
 
-    // 驱动初始化
     static lv_disp_draw_buf_t disp_buf;
     static lv_color_t buf[WINDOW_WIDTH * WINDOW_HEIGHT / 10];
     lv_disp_draw_buf_init(&disp_buf, buf, NULL, WINDOW_WIDTH * WINDOW_HEIGHT / 10);
@@ -371,42 +357,70 @@ int main(void)
     if(ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
     if(ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
 
-    // ★★★ IP 地址 (请确认) ★★★
-    if (net_init("172.28.17.136", 8888) != 0) {
+    // ★ 请确认IP ★
+    if (net_init("172.24.139.145", 8888) != 0) {
         printf("Connect failed\n");
         return -1;
     }
 
-    // --- 主循环 ---
+    // ★★★ 核心修复：客户端蓄水池逻辑 ★★★
+    static uint8_t rx_buffer[10240]; 
+    static int rx_len = 0; 
+
     while(1) {
         lv_timer_handler(); 
-        uint8_t buffer[1024];
-        int len = net_poll(buffer);
-
-        if (len > 0) {
-            // ★★★ 核心修复：多包循环解析逻辑 ★★★
-            // 处理粘包情况 (例如: {"cmd":"result"}{"cmd":"update"})
-            char *parse_ptr = (char*)buffer;
+        
+        uint8_t temp_buf[1024];
+        int n = net_poll(temp_buf); // 非阻塞读
+        
+        if (n > 0) {
+            // 防止缓冲区溢出
+            if (rx_len + n >= 10240) {
+                printf("[Client] Buffer Overflow! Reset.\n");
+                rx_len = 0; 
+            }
             
-            while (*parse_ptr == '{') {
+            // 1. 拼接数据到末尾
+            memcpy(rx_buffer + rx_len, temp_buf, n);
+            rx_len += n;
+            rx_buffer[rx_len] = '\0'; 
+            
+            // 2. 循环解析缓冲区里的所有完整包
+            int parse_offset = 0;
+            while (parse_offset < rx_len) {
+                // 找 '{'
+                char *start_ptr = strchr((char*)rx_buffer + parse_offset, '{');
+                if (!start_ptr) break; // 没找到，剩下的可能是乱码或不完整
+                
+                // 更新偏移量到 JSON 开始处
+                parse_offset = (uint8_t*)start_ptr - rx_buffer;
+
                 const char *end_ptr = NULL;
-                // 使用 ParseWithOpts 可以知道解析到哪里停下来
-                cJSON *json = cJSON_ParseWithOpts(parse_ptr, &end_ptr, 0);
+                cJSON *json = cJSON_ParseWithOpts(start_ptr, &end_ptr, 0);
                 
                 if (json) {
                     process_one_json(json);
                     cJSON_Delete(json);
                     
-                    // 移动指针到下一个 JSON 的开头
-                    parse_ptr = (char*)end_ptr;
-                    // 跳过可能的空白字符
-                    while (*parse_ptr && *parse_ptr != '{') parse_ptr++;
+                    // 更新偏移量到 JSON 结尾
+                    parse_offset = (uint8_t*)end_ptr - rx_buffer;
                 } else {
-                    // 解析失败，跳出防止死循环
+                    // 解析失败（数据不完整），保留当前位置，等待下一次拼接
                     break;
                 }
             }
+
+            // 3. 内存搬运：把没处理完的数据移到最前面
+            if (parse_offset > 0) {
+                int remaining = rx_len - parse_offset;
+                if (remaining > 0) {
+                    memmove(rx_buffer, rx_buffer + parse_offset, remaining);
+                }
+                rx_len = remaining;
+                memset(rx_buffer + rx_len, 0, 10240 - rx_len);
+            }
         }
+
         usleep(5000); 
         lv_tick_inc(5);
     }

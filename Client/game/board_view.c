@@ -28,36 +28,37 @@ void board_view_draw_stone(lv_obj_t *parent, int x, int y, int color) {
     lv_obj_clear_flag(stone, LV_OBJ_FLAG_SCROLLABLE); 
 }
 
-// 清盘函数 (保持不变)
+// 清盘函数
 void board_view_clear(lv_obj_t *parent) {
     if (!parent) return;
     lv_obj_clean(parent);
 }
 
-// 2. 修正后的点击检测函数
+// 2. 修正后的点击检测函数 (动态获取坐标)
 bool board_view_get_click_xy(lv_obj_t * obj, int * x_out, int * y_out) {
     lv_indev_t * indev = lv_indev_get_act();
     lv_point_t point;
-    lv_indev_get_point(indev, &point); 
+    lv_indev_get_point(indev, &point); // 获取点击的绝对坐标
 
-    // --- 第一步：计算容器内的相对像素坐标 ---
-    // 你的棋盘容器偏移：X=180, Y=20 (如果以后改了UI布局，这里要跟着改)
-    int local_x = point.x - 180; 
-    int local_y = point.y - 20;
+    // 获取容器的绝对坐标区域
+    lv_area_t coords;
+    lv_obj_get_coords(obj, &coords);
 
-    // --- 第二步：反向推算网格坐标 (必须用 float) ---
-    // 公式：(点击位置 - 边距) / 单格大小
+    // 计算相对坐标 (点击点 - 容器左上角)
+    int local_x = point.x - coords.x1;
+    int local_y = point.y - coords.y1;
+
+    // 反推网格索引
     float fx = ((float)local_x - BOARD_PADDING) / CELL_SIZE;
     float fy = ((float)local_y - BOARD_PADDING) / CELL_SIZE;
 
-    // --- 第三步：四舍五入取整 ---
-    // 比如算出 3.9，四舍五入就是 4；算出 3.1，就是 3
+    // 四舍五入取最近的交叉点
     int gx = (int)(fx + 0.5f);
     int gy = (int)(fy + 0.5f);
 
-    // --- 第四步：合法性检查 ---
+    // 越界检查
     if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE) {
-        return false; // 点到棋盘外面去了
+        return false;
     }
 
     *x_out = gx;
