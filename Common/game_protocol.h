@@ -6,52 +6,108 @@
 // --- 基础配置 ---
 #define SERVER_PORT 8888
 
-// --- 1. 新增：JSON 协议相关定义 ---
-// 只要包的第一个字符是 '{'，就认为是 JSON 包
-#define KEY_CMD "cmd"
-#define KEY_PAYLOAD "payload"
-#define KEY_MESSAGE "message"
-#define KEY_SUCCESS "success"
+// =============================================================
+// ★★★ 第一部分：JSON 协议常量定义 (新增核心) ★★★
+// =============================================================
 
-// JSON 指令字 (字符串)
-#define CMD_STR_PLACE_STONE "place_stone"
+// 1. 通用字段 Key
+#define KEY_CMD       "cmd"         // 指令类型
+#define KEY_PAYLOAD   "payload"     // 数据载荷(备用)
+#define KEY_SUCCESS   "success"     // 成功标记 (1/0)
+#define KEY_MESSAGE   "message"     // 提示信息
 
-// JSON 字段 Key
-#define KEY_X "x"
-#define KEY_Y "y"
-#define KEY_COLOR "color" 
-// color: 0=Black, 1=White
+// 2. 账号相关 Key
+#define KEY_USERNAME  "username"
+#define KEY_PASSWORD  "password"
+
+// 3. 房间/游戏相关 Key
+#define KEY_ROOM_ID   "room_id"
+#define KEY_X         "x"
+#define KEY_Y         "y"
+#define KEY_COLOR     "color"       // 0=Black, 1=White
+#define KEY_WINNER    "winner"      // 获胜者颜色
+
+// 4. 房间列表相关 Key
+#define KEY_ROOM_LIST "list"        // 房间数组
+#define KEY_COUNT     "count"       // 房间/人数数量
+#define KEY_STATUS    "status"      // 房间状态: 0=Wait, 2=Play
+
+// 5. 房间内状态同步 Key
+#define KEY_P1_NAME   "p1_name"     // 房主名字
+#define KEY_P1_READY  "p1_ready"    // 房主准备状态
+#define KEY_P2_NAME   "p2_name"     // 挑战者名字
+#define KEY_P2_READY  "p2_ready"    // 挑战者准备状态
+#define KEY_YOUR_COLOR "your_color" // 游戏开始时分配给你的颜色
+
+// -------------------------------------------------------------
+// JSON 指令字 (Value Definitions) - 这些是网络传输的实际字符串
+// -------------------------------------------------------------
+
+// [账号模块]
+#define CMD_STR_LOGIN         "login"
+#define CMD_STR_REGISTER      "register"
+#define CMD_STR_LOGOUT        "logout"
+#define CMD_STR_AUTH_RESULT   "auth_result"
+
+// [大厅模块]
+#define CMD_STR_CREATE_ROOM   "create_room"
+#define CMD_STR_JOIN_ROOM     "join_room"
+#define CMD_STR_LEAVE_ROOM    "leave_room"
+#define CMD_STR_GET_ROOM_LIST "get_room_list"
+#define CMD_STR_ROOM_LIST_RES "room_list_res" // 房间列表响应
+#define CMD_STR_ROOM_RESULT   "room_result"   // 进房/建房的操作结果
+
+// [游戏/房间模块]
+#define CMD_STR_ROOM_UPDATE   "room_update"   // 广播房间内状态(谁准备了)
+#define CMD_STR_READY         "ready"         // 准备
+#define CMD_STR_CANCEL_READY  "cancel_ready"  // 取消准备
+#define CMD_STR_GAME_START    "game_start"    // 游戏开始
+#define CMD_STR_PLACE_STONE   "place_stone"   // 落子
+#define CMD_STR_GAME_OVER     "game_over"     // 游戏结束
 
 
-// --- 2. 旧的二进制命令 ID (保持不变，为了兼容) ---
-// 0x00 - 0x0F: 系统/连接级
-#define CMD_HEARTBEAT     0x00 
+// =============================================================
+// ★★★ 第二部分：旧的二进制定义 (暂时保留，防止编译报错) ★★★
+// (等你把后面4个文件都改完，下面这些 struct 就可以删掉了)
+// =============================================================
 
-// 0x10 - 0x1F: 账号相关
-#define CMD_LOGIN         0x10 
-#define CMD_REGISTER      0x11 
-#define CMD_AUTH_RESULT   0x12 
-#define CMD_LOGOUT        0x13 
+// 旧命令 ID
+#define CMD_LOGIN_BIN         0x10 
+#define CMD_REGISTER_BIN      0x11 
+#define CMD_AUTH_RESULT_BIN   0x12 
+#define CMD_LOGOUT_BIN        0x13 
+#define CMD_GET_ROOM_LIST_BIN 0x20 
+#define CMD_ROOM_LIST_RES_BIN 0x21 
+#define CMD_CREATE_ROOM_BIN   0x22 
+#define CMD_JOIN_ROOM_BIN     0x23 
+#define CMD_ROOM_RESULT_BIN   0x24 
+#define CMD_LEAVE_ROOM_BIN    0x25 
+#define CMD_ROOM_UPDATE_BIN   0x26 
+#define CMD_GAME_START_BIN    0x30 
+#define CMD_PLACE_STONE_BIN   0x31 
+#define CMD_GAME_OVER_BIN     0x32 
+#define CMD_READY_BIN         0x34 
+#define CMD_CANCEL_READY_BIN  0x35 
 
-// 0x20 - 0x2F: 大厅/房间相关
-#define CMD_GET_ROOM_LIST 0x20 
-#define CMD_ROOM_LIST_RES 0x21 
-#define CMD_CREATE_ROOM   0x22 
-#define CMD_JOIN_ROOM     0x23 
-#define CMD_ROOM_RESULT   0x24 
-#define CMD_LEAVE_ROOM    0x25 
-#define CMD_ROOM_UPDATE   0x26 
+// 为了兼容之前的代码变量名，保留旧 CMD 宏定义，但在新代码里我们不再用它
+#define CMD_LOGIN CMD_LOGIN_BIN
+#define CMD_REGISTER CMD_REGISTER_BIN
+#define CMD_CREATE_ROOM CMD_CREATE_ROOM_BIN
+#define CMD_JOIN_ROOM CMD_JOIN_ROOM_BIN
+#define CMD_GET_ROOM_LIST CMD_GET_ROOM_LIST_BIN
+#define CMD_LEAVE_ROOM CMD_LEAVE_ROOM_BIN
+#define CMD_READY CMD_READY_BIN
+#define CMD_CANCEL_READY CMD_CANCEL_READY_BIN
+#define CMD_PLACE_STONE CMD_PLACE_STONE_BIN
+#define CMD_AUTH_RESULT CMD_AUTH_RESULT_BIN
+#define CMD_ROOM_LIST_RES CMD_ROOM_LIST_RES_BIN
+#define CMD_ROOM_RESULT CMD_ROOM_RESULT_BIN
+#define CMD_ROOM_UPDATE CMD_ROOM_UPDATE_BIN
+#define CMD_GAME_START CMD_GAME_START_BIN
+#define CMD_GAME_OVER CMD_GAME_OVER_BIN
 
-// 0x30 - 0x3F: 游戏逻辑相关
-#define CMD_GAME_START    0x30 
-#define CMD_PLACE_STONE   0x31 // (虽然我们这次用JSON，但保留定义防止报错)
-#define CMD_GAME_OVER     0x32 
-#define CMD_SURRENDER     0x33 
-#define CMD_READY         0x34 
-#define CMD_CANCEL_READY  0x35 
 
-// --- 3. 旧的数据结构定义 (保持不变) ---
-#pragma pack(1) 
+#pragma pack(1)
 
 typedef struct {
     uint8_t cmd;        

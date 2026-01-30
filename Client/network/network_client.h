@@ -13,6 +13,7 @@ void net_send_register(const char* username, const char* password);
 void net_send_logout(); // 新增
 void net_send_create_room();
 void net_send_join_room(int room_id);
+void net_send_ready_action(bool is_ready);
 
 // 接收功能
 int net_poll(uint8_t* out_pkt_buffer);

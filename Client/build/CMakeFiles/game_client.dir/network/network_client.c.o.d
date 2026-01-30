@@ -97,6 +97,7 @@ CMakeFiles/game_client.dir/network/network_client.c.o: \
  /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
  /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
  /mnt/c/Users/Matthew/Desktop/new_project_0126/Client/network/network_client.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \

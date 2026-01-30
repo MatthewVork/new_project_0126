@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <sys/socket.h> 
 #include "../Common/game_protocol.h" 
-#include "../Common/cJSON.h" // ★★★ 必须引入 cJSON ★★★
+#include "../Common/cJSON.h" // 必须引入 cJSON
 
 // 引入游戏绘图模块
 #include "game/game_config.h"
@@ -30,8 +30,6 @@ char p2_name_cache[32] = "";
 // --- 前置声明 ---
 void hide_all_popups();
 void timer_reset_game(lv_timer_t * timer); 
-extern void send_raw(void *data, int len); 
-// ★★★ 声明新的 JSON 发送函数 ★★★
 extern void net_send_place_stone_json(int x, int y, int color);
 
 // --- 强制刷新标签函数 ---
@@ -83,14 +81,12 @@ void timer_hide_start_panel(lv_timer_t * timer) {
 
 // --- 事件处理 ---
 
-// ★★★ 修改：使用 JSON 发送落子 ★★★
 void event_board_click_handler(lv_event_t * e) {
     if (my_game_color != current_game_turn) return;
     int x, y;
     if (board_view_get_click_xy(e->target, &x, &y)) {
-        // 调用新的 JSON 发送函数
         net_send_place_stone_json(x, y, my_game_color);
-        printf("[Game] 点击 (%d, %d)，尝试 JSON 发送\n", x, y);
+        printf("[Game] 点击 (%d, %d)，发送 JSON 落子请求\n", x, y);
     }
 }
 
@@ -120,6 +116,213 @@ void hide_all_popups() {
     if(ui_PanelRegSuccess)   lv_obj_add_flag(ui_PanelRegSuccess, LV_OBJ_FLAG_HIDDEN);
     if(ui_PanelRegFail)      lv_obj_add_flag(ui_PanelRegFail, LV_OBJ_FLAG_HIDDEN);
     if(ui_PanelRegRepeat)    lv_obj_add_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
+}
+
+// ★★★ 核心辅助：处理单个 JSON 逻辑 ★★★
+void process_one_json(cJSON *json) {
+    if (!json) return;
+    
+    cJSON *cmdItem = cJSON_GetObjectItem(json, KEY_CMD);
+    if (!cmdItem || !cJSON_IsString(cmdItem)) return;
+    
+    char *cmd = cmdItem->valuestring;
+
+    // 1. 登录/注册结果
+    if (strcmp(cmd, CMD_STR_AUTH_RESULT) == 0) {
+        cJSON *succItem = cJSON_GetObjectItem(json, KEY_SUCCESS);
+        cJSON *msgItem = cJSON_GetObjectItem(json, KEY_MESSAGE);
+        int success = succItem ? succItem->valueint : 0;
+        char *msg = msgItem ? msgItem->valuestring : "";
+        
+        if (lv_scr_act() == ui_ScreenRegister) {
+            hide_all_popups(); 
+            if (success) {
+                if(ui_PanelRegSuccess) lv_obj_clear_flag(ui_PanelRegSuccess, LV_OBJ_FLAG_HIDDEN);
+                lv_timer_set_repeat_count(lv_timer_create(timer_reg_success_callback, 1500, NULL), 1);
+            } else {
+                if (strstr(msg, "Exist") || strstr(msg, "Repeat")) {
+                    if(ui_PanelRegRepeat) lv_obj_clear_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
+                } else {
+                    if(ui_PanelRegFail) lv_obj_clear_flag(ui_PanelRegFail, LV_OBJ_FLAG_HIDDEN);
+                }
+                lv_timer_set_repeat_count(lv_timer_create(timer_close_popup_callback, 1500, NULL), 1);
+            }
+        } else if (lv_scr_act() == ui_ScreenLogin) {
+            hide_all_popups();
+            if (success) {
+                if(ui_PanelLoginSuccess) lv_obj_clear_flag(ui_PanelLoginSuccess, LV_OBJ_FLAG_HIDDEN);
+                lv_timer_set_repeat_count(lv_timer_create(timer_login_success_callback, 1500, NULL), 1);
+            } else {
+                if (strstr(msg, "Repeat") || strstr(msg, "Already")) {
+                    if(ui_PanelLoginRepeat) lv_obj_clear_flag(ui_PanelLoginRepeat, LV_OBJ_FLAG_HIDDEN);
+                } else {
+                    if(ui_PanelLoginFail) lv_obj_clear_flag(ui_PanelLoginFail, LV_OBJ_FLAG_HIDDEN);
+                }
+                lv_timer_set_repeat_count(lv_timer_create(timer_close_popup_callback, 1500, NULL), 1);
+            }
+        }
+    }
+    
+    // 2. 房间列表响应
+    else if (strcmp(cmd, CMD_STR_ROOM_LIST_RES) == 0) {
+        cJSON *list = cJSON_GetObjectItem(json, KEY_ROOM_LIST);
+        if (cJSON_IsArray(list)) {
+            uint32_t child_cnt = lv_obj_get_child_cnt(ui_PanelRoomContainer);
+            for(int i = child_cnt - 1; i >= 0; i--) {
+                lv_obj_t * child = lv_obj_get_child(ui_PanelRoomContainer, i);
+                if (child != ui_PanelRoomTemplate) lv_obj_del(child);
+            }
+            int count = cJSON_GetArraySize(list);
+            for (int i=0; i<count; i++) {
+                cJSON *item = cJSON_GetArrayItem(list, i);
+                int rid = cJSON_GetObjectItem(item, KEY_ROOM_ID)->valueint;
+                int p_cnt = cJSON_GetObjectItem(item, KEY_COUNT)->valueint;
+                int stat = cJSON_GetObjectItem(item, KEY_STATUS)->valueint;
+
+                lv_obj_t * room_btn = lv_obj_create(ui_PanelRoomContainer);
+                lv_obj_set_size(room_btn, 260, 120);
+                lv_obj_set_style_bg_color(room_btn, lv_color_hex(0x404040), 0);
+                lv_obj_set_style_border_width(room_btn, 2, 0);
+                lv_obj_set_style_radius(room_btn, 10, 0);
+                lv_obj_set_user_data(room_btn, (void*)(intptr_t)rid);
+
+                lv_obj_t * label = lv_label_create(room_btn);
+                lv_label_set_text_fmt(label, "Room #%d\n%s", rid, stat==0?"Wait":"Play");
+                lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+                
+                lv_obj_t * label_stat = lv_label_create(room_btn);
+                if(stat == 0) {
+                    lv_label_set_text_fmt(label_stat, "Waiting (%d/2)", p_cnt);
+                    lv_obj_set_style_text_color(label_stat, lv_color_hex(0x00FF00), 0);
+                } else {
+                    lv_label_set_text(label_stat, "Playing (2/2)");
+                    lv_obj_set_style_text_color(label_stat, lv_color_hex(0xFF0000), 0);
+                }
+                lv_obj_align(label_stat, LV_ALIGN_BOTTOM_MID, 0, -15);
+                lv_obj_add_event_cb(room_btn, event_join_room_handler, LV_EVENT_CLICKED, NULL);
+            }
+        }
+    }
+
+    // 3. 房间操作结果 (重点修复：确保创建成功必进房间)
+    else if (strcmp(cmd, CMD_STR_ROOM_RESULT) == 0) {
+        cJSON *succItem = cJSON_GetObjectItem(json, KEY_SUCCESS);
+        cJSON *msgItem = cJSON_GetObjectItem(json, KEY_MESSAGE);
+        int success = succItem ? succItem->valueint : 0;
+        char *msg = msgItem ? msgItem->valuestring : "";
+        
+        printf("[UI] 房间操作结果: %s (Success=%d)\n", msg, success);
+        if (success) {
+            if (msg && strstr(msg, "Left")) {
+                _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
+                net_send_get_room_list(); 
+            } else {
+                // ★ 无论是否在 Lobby，只要成功就切到 Game
+                if (lv_scr_act() != ui_ScreenGame) {
+                    _ui_screen_change(&ui_ScreenGame, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenGame_screen_init);
+                    if(ui_BoardContainer) board_view_clear(ui_BoardContainer); 
+                }
+            }
+        } else {
+            printf("[UI] 操作失败: %s\n", msg);
+        }
+    }
+
+    // 4. 房间状态更新
+    else if (strcmp(cmd, CMD_STR_ROOM_UPDATE) == 0) {
+        cJSON *p1nItem = cJSON_GetObjectItem(json, KEY_P1_NAME);
+        cJSON *p1rItem = cJSON_GetObjectItem(json, KEY_P1_READY);
+        cJSON *p2nItem = cJSON_GetObjectItem(json, KEY_P2_NAME);
+        cJSON *p2rItem = cJSON_GetObjectItem(json, KEY_P2_READY);
+
+        char *p1n = p1nItem ? p1nItem->valuestring : "";
+        int p1r = p1rItem ? p1rItem->valueint : 0;
+        char *p2n = p2nItem ? p2nItem->valuestring : "";
+        int p2r = p2rItem ? p2rItem->valueint : 0;
+
+        if (ui_LabelPlayer1) {
+            lv_label_set_recolor(ui_LabelPlayer1, true);
+            if (strlen(p1n) > 0) {
+                strncpy(p1_name_cache, p1n, 31);
+                lv_label_set_text_fmt(ui_LabelPlayer1, "Host: %s\n%s", p1n, p1r ? "#00ff00 [READY]#" : "#ffff00 [WAITING]#");
+            } else {
+                p1_name_cache[0] = '\0';
+                lv_label_set_text(ui_LabelPlayer1, "Host: [EMPTY]\n#808080 [OFFLINE]#");
+            }
+        }
+        if (ui_LabelPlayer2) {
+            lv_label_set_recolor(ui_LabelPlayer2, true);
+            if (strlen(p2n) > 0) {
+                strncpy(p2_name_cache, p2n, 31);
+                lv_label_set_text_fmt(ui_LabelPlayer2, "Player: %s\n%s", p2n, p2r ? "#00ff00 [READY]#" : "#ffff00 [WAITING]#");
+            } else {
+                p2_name_cache[0] = '\0';
+                lv_label_set_text(ui_LabelPlayer2, "Waiting for\nPlayer...");
+            }
+        }
+    }
+
+    // 5. 游戏开始
+    else if (strcmp(cmd, CMD_STR_GAME_START) == 0) {
+        cJSON *colorItem = cJSON_GetObjectItem(json, KEY_YOUR_COLOR);
+        my_game_color = colorItem ? colorItem->valueint : 0;
+        printf("[Game] 开始! 我是: %d\n", my_game_color);
+        
+        current_game_turn = 0; 
+        if (game_reset_timer) { lv_timer_del(game_reset_timer); game_reset_timer = NULL; }
+        if (ui_BoardContainer) board_view_clear(ui_BoardContainer);
+        if (ui_PanelMatchWin) lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
+        if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
+        if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
+        if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
+        
+        update_turn_ui(); 
+        is_player_ready = false; 
+        if(ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready?");
+        
+        if (ui_PanelStartTip) {
+            lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_move_foreground(ui_PanelStartTip);
+            lv_timer_set_repeat_count(lv_timer_create(timer_hide_start_panel, 1500, NULL), 1);
+        }
+        if (ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    // 6. 落子
+    else if (strcmp(cmd, CMD_STR_PLACE_STONE) == 0) {
+        cJSON *xItem = cJSON_GetObjectItem(json, KEY_X);
+        cJSON *yItem = cJSON_GetObjectItem(json, KEY_Y);
+        cJSON *cItem = cJSON_GetObjectItem(json, KEY_COLOR);
+        
+        if (xItem && yItem && cItem) {
+            board_view_draw_stone(ui_BoardContainer, xItem->valueint, yItem->valueint, cItem->valueint);
+            current_game_turn = !current_game_turn;
+            update_turn_ui();
+        }
+    }
+
+    // 7. 游戏结束
+    else if (strcmp(cmd, CMD_STR_GAME_OVER) == 0) {
+        cJSON *winItem = cJSON_GetObjectItem(json, KEY_WINNER);
+        int winner = winItem ? winItem->valueint : -1;
+        printf("[Client] 游戏结束，获胜者: %d\n", winner);
+
+        if (winner == my_game_color) {
+            if (ui_PanelMatchWin) {
+                lv_obj_clear_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_move_foreground(ui_PanelMatchWin);
+            }
+        } else {
+            if (ui_PanelMatchLoss) {
+                lv_obj_clear_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_move_foreground(ui_PanelMatchLoss);
+            }
+        }
+        ui_reset_labels_to_waiting();
+        if (game_reset_timer) lv_timer_del(game_reset_timer);
+        game_reset_timer = lv_timer_create(timer_reset_game, 3000, NULL);
+        lv_timer_set_repeat_count(game_reset_timer, 1);
+    }
 }
 
 int main(void)
@@ -168,7 +371,7 @@ int main(void)
     if(ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
     if(ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
 
-    // ★★★ 请务必确认 IP 地址 ★★★
+    // ★★★ IP 地址 (请确认) ★★★
     if (net_init("172.28.17.136", 8888) != 0) {
         printf("Connect failed\n");
         return -1;
@@ -181,190 +384,26 @@ int main(void)
         int len = net_poll(buffer);
 
         if (len > 0) {
-            // ★★★ 核心修改：判断是 JSON 还是 二进制 ★★★
-            if (buffer[0] == '{') {
-                // ---> 这是一个 JSON 包
-                printf("[Client] 收到 JSON: %s\n", buffer);
-                cJSON *json = cJSON_Parse((char*)buffer);
+            // ★★★ 核心修复：多包循环解析逻辑 ★★★
+            // 处理粘包情况 (例如: {"cmd":"result"}{"cmd":"update"})
+            char *parse_ptr = (char*)buffer;
+            
+            while (*parse_ptr == '{') {
+                const char *end_ptr = NULL;
+                // 使用 ParseWithOpts 可以知道解析到哪里停下来
+                cJSON *json = cJSON_ParseWithOpts(parse_ptr, &end_ptr, 0);
+                
                 if (json) {
-                    cJSON *cmdItem = cJSON_GetObjectItem(json, KEY_CMD);
-                    if (cmdItem && cJSON_IsString(cmdItem)) {
-                        // 处理落子广播 (place_stone)
-                        if (strcmp(cmdItem->valuestring, CMD_STR_PLACE_STONE) == 0) {
-                            int x = cJSON_GetObjectItem(json, KEY_X)->valueint;
-                            int y = cJSON_GetObjectItem(json, KEY_Y)->valueint;
-                            int color = cJSON_GetObjectItem(json, KEY_COLOR)->valueint;
-                            
-                            printf("[Game-JSON] 收到落子: x=%d, y=%d, color=%d\n", x, y, color);
-                            board_view_draw_stone(ui_BoardContainer, x, y, color);
-                            current_game_turn = !current_game_turn;
-                            update_turn_ui();
-                        }
-                    }
-                    cJSON_Delete(json); // 记得释放
-                }
-            } 
-            else {
-                // ---> 这是一个 二进制包 (走原来的逻辑)
-                int offset = 0;
-                while (offset < len) {
-                    uint8_t cmd = buffer[offset];
-                    int packet_len = 0;
-                    uint8_t* pData = buffer + offset;
-
-                    if (cmd == CMD_AUTH_RESULT) packet_len = sizeof(ResultPacket);
-                    else if (cmd == CMD_ROOM_LIST_RES) {
-                        int count = buffer[offset + 1];
-                        packet_len = 2 + count * sizeof(RoomInfo);
-                    }
-                    else if (cmd == CMD_ROOM_RESULT) packet_len = sizeof(ResultPacket);
-                    else if (cmd == CMD_ROOM_UPDATE) packet_len = sizeof(RoomUpdatePacket);
-                    else if (cmd == CMD_GAME_START) packet_len = sizeof(GameStartPacket);
-                    else if (cmd == CMD_GAME_OVER) packet_len = sizeof(GameOverPacket);
-                    else {
-                        // 未知指令跳过
-                        break;
-                    }
-
-                    if (offset + packet_len > len) break;
-
-                    // --- 二进制处理逻辑 ---
-                    if (cmd == CMD_AUTH_RESULT) {
-                        ResultPacket* res = (ResultPacket*)pData;
-                        if (lv_scr_act() == ui_ScreenRegister) {
-                            hide_all_popups(); 
-                            if (res->success) {
-                                if(ui_PanelRegSuccess) lv_obj_clear_flag(ui_PanelRegSuccess, LV_OBJ_FLAG_HIDDEN);
-                                lv_timer_set_repeat_count(lv_timer_create(timer_reg_success_callback, 1500, NULL), 1);
-                            } else {
-                                if (strstr(res->message, "Exist") || strstr(res->message, "Repeat")) {
-                                    if(ui_PanelRegRepeat) lv_obj_clear_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
-                                } else {
-                                    if(ui_PanelRegFail) lv_obj_clear_flag(ui_PanelRegFail, LV_OBJ_FLAG_HIDDEN);
-                                }
-                                lv_timer_set_repeat_count(lv_timer_create(timer_close_popup_callback, 1500, NULL), 1);
-                            }
-                        } else if (lv_scr_act() == ui_ScreenLogin) {
-                            hide_all_popups();
-                            if (res->success) {
-                                if(ui_PanelLoginSuccess) lv_obj_clear_flag(ui_PanelLoginSuccess, LV_OBJ_FLAG_HIDDEN);
-                                lv_timer_set_repeat_count(lv_timer_create(timer_login_success_callback, 1500, NULL), 1);
-                            } else {
-                                if (strstr(res->message, "Repeat") || strstr(res->message, "already")) {
-                                    if(ui_PanelLoginRepeat) lv_obj_clear_flag(ui_PanelLoginRepeat, LV_OBJ_FLAG_HIDDEN);
-                                } else {
-                                    if(ui_PanelLoginFail) lv_obj_clear_flag(ui_PanelLoginFail, LV_OBJ_FLAG_HIDDEN);
-                                }
-                                lv_timer_set_repeat_count(lv_timer_create(timer_close_popup_callback, 1500, NULL), 1);
-                            }
-                        }
-                    }
-                    else if (cmd == CMD_ROOM_LIST_RES) {
-                        int count = pData[1];
-                        RoomInfo *rooms = (RoomInfo*)(pData + 2);
-                        uint32_t child_cnt = lv_obj_get_child_cnt(ui_PanelRoomContainer);
-                        for(int i = child_cnt - 1; i >= 0; i--) {
-                            lv_obj_t * child = lv_obj_get_child(ui_PanelRoomContainer, i);
-                            if (child != ui_PanelRoomTemplate) lv_obj_del(child);
-                        }
-                        for(int i=0; i<count; i++) {
-                            lv_obj_t * item = lv_obj_create(ui_PanelRoomContainer);
-                            lv_obj_set_size(item, 260, 120);
-                            lv_obj_set_style_bg_color(item, lv_color_hex(0x404040), 0);
-                            lv_obj_set_style_border_width(item, 2, 0);
-                            lv_obj_set_style_radius(item, 10, 0);
-                            lv_obj_set_user_data(item, (void*)(intptr_t)rooms[i].room_id);
-
-                            lv_obj_t * label = lv_label_create(item);
-                            lv_label_set_text_fmt(label, "Room #%d\n%s", rooms[i].room_id, rooms[i].status==0?"Wait":"Play");
-                            lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-                            
-                            lv_obj_t * label_stat = lv_label_create(item);
-                            if(rooms[i].status == 0) {
-                                lv_label_set_text_fmt(label_stat, "Waiting (%d/2)", rooms[i].player_count);
-                                lv_obj_set_style_text_color(label_stat, lv_color_hex(0x00FF00), 0);
-                            } else {
-                                lv_label_set_text(label_stat, "Playing (2/2)");
-                                lv_obj_set_style_text_color(label_stat, lv_color_hex(0xFF0000), 0);
-                            }
-                            lv_obj_align(label_stat, LV_ALIGN_BOTTOM_MID, 0, -15);
-                            lv_obj_add_event_cb(item, event_join_room_handler, LV_EVENT_CLICKED, NULL);
-                        }
-                    }
-                    else if (cmd == CMD_ROOM_RESULT) {
-                        ResultPacket* res = (ResultPacket*)pData;
-                        if (res->success) {
-                            printf("[UI] 房间操作成功: %s\n", res->message);
-                            if (strstr(res->message, "Left")) {
-                                _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
-                                net_send_get_room_list(); 
-                            } else {
-                                if (lv_scr_act() != ui_ScreenGame) {
-                                    _ui_screen_change(&ui_ScreenGame, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScreenGame_screen_init);
-                                    if(ui_BoardContainer) board_view_clear(ui_BoardContainer); 
-                                }
-                            }
-                        } else {
-                            printf("[UI] 房间操作失败: %s\n", res->message);
-                        }
-                    }
-                    else if (cmd == CMD_ROOM_UPDATE) {
-                        RoomUpdatePacket *pkt = (RoomUpdatePacket*)pData;
-                        if (ui_LabelPlayer1) {
-                            lv_label_set_recolor(ui_LabelPlayer1, true);
-                            if (pkt->p1_state == 1) {
-                                strncpy(p1_name_cache, pkt->p1_name, 31); 
-                                lv_label_set_text_fmt(ui_LabelPlayer1, "Host: %s\n%s", pkt->p1_name, pkt->p1_ready ? "#00ff00 [READY]#" : "#ffff00 [WAITING]#");
-                            } else {
-                                p1_name_cache[0] = '\0';
-                                lv_label_set_text(ui_LabelPlayer1, "Host: [EMPTY]\n#808080 [OFFLINE]#");
-                            }
-                        }
-                        if (ui_LabelPlayer2) {
-                            lv_label_set_recolor(ui_LabelPlayer2, true);
-                            if (pkt->p2_state == 1) {
-                                strncpy(p2_name_cache, pkt->p2_name, 31);
-                                lv_label_set_text_fmt(ui_LabelPlayer2, "Player: %s\n%s", pkt->p2_name, pkt->p2_ready ? "#00ff00 [READY]#" : "#ffff00 [WAITING]#");
-                            } else {
-                                p2_name_cache[0] = '\0';
-                                lv_label_set_text(ui_LabelPlayer2, "Waiting for\nPlayer...");
-                            }
-                        }
-                    }
-                    else if (cmd == CMD_GAME_START) {
-                        GameStartPacket *pkt = (GameStartPacket*)pData;
-                        my_game_color = pkt->your_color;
-                        if (game_reset_timer) { lv_timer_del(game_reset_timer); game_reset_timer = NULL; }
-                        if (ui_BoardContainer) board_view_clear(ui_BoardContainer);
-                        if (ui_PanelMatchWin) lv_obj_add_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN);
-                        if (ui_PanelMatchLoss) lv_obj_add_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN);
-                        if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
-                        if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
-                        current_game_turn = 0;
-                        update_turn_ui();
-                        is_player_ready = false; 
-                        if(ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready?");
-                        if (ui_PanelStartTip) {
-                            lv_obj_clear_flag(ui_PanelStartTip, LV_OBJ_FLAG_HIDDEN);
-                            lv_obj_move_foreground(ui_PanelStartTip);
-                            lv_timer_set_repeat_count(lv_timer_create(timer_hide_start_panel, 1500, NULL), 1);
-                        }
-                        if (ui_Button5) lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
-                    }
-                    else if (cmd == CMD_GAME_OVER) {
-                        GameOverPacket *pkt = (GameOverPacket*)pData;
-                        if (pkt->winner_color == my_game_color) {
-                            if (ui_PanelMatchWin) { lv_obj_clear_flag(ui_PanelMatchWin, LV_OBJ_FLAG_HIDDEN); lv_obj_move_foreground(ui_PanelMatchWin); }
-                        } else {
-                            if (ui_PanelMatchLoss) { lv_obj_clear_flag(ui_PanelMatchLoss, LV_OBJ_FLAG_HIDDEN); lv_obj_move_foreground(ui_PanelMatchLoss); }
-                        }
-                        ui_reset_labels_to_waiting();
-                        if (game_reset_timer) lv_timer_del(game_reset_timer);
-                        game_reset_timer = lv_timer_create(timer_reset_game, 3000, NULL);
-                        lv_timer_set_repeat_count(game_reset_timer, 1);
-                    }
-
-                    offset += packet_len;
+                    process_one_json(json);
+                    cJSON_Delete(json);
+                    
+                    // 移动指针到下一个 JSON 的开头
+                    parse_ptr = (char*)end_ptr;
+                    // 跳过可能的空白字符
+                    while (*parse_ptr && *parse_ptr != '{') parse_ptr++;
+                } else {
+                    // 解析失败，跳出防止死循环
+                    break;
                 }
             }
         }

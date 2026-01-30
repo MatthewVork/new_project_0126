@@ -7,9 +7,12 @@
 
 bool is_player_ready = false;
 extern lv_timer_t * game_reset_timer;
-extern void send_raw(void *data, int len); // 声明 network_client.c 里的函数
 
-// 登录按钮
+// 这里的声明其实可以去掉，因为我们引用了 network_client.h
+// 但留着也没事
+extern void send_raw(void *data, int len); 
+
+// 登录按钮 (已自动适配 JSON，因为 net_send_login 改过了)
 void OnLoginClicked(lv_event_t * e)
 {
     const char* username = lv_textarea_get_text(ui_InputUser);
@@ -23,7 +26,7 @@ void OnLoginClicked(lv_event_t * e)
     net_send_login(username, password);
 }
 
-// 注册按钮
+// 注册按钮 (已自动适配 JSON)
 void OnRegisterClicked(lv_event_t * e)
 {
     const char* username = lv_textarea_get_text(ui_RegUser);
@@ -40,45 +43,36 @@ void OnRegisterClicked(lv_event_t * e)
     net_send_register(username, password);
 }
 
-// 退出登录按钮 (新增)
+// 退出登录按钮 (已自动适配 JSON)
 void OnLogoutClicked(lv_event_t * e)
 {
     printf("[UI] 玩家点击了注销 (Logout)\n");
-
-    // 1. 发送网络请求：告诉服务器清除我的在线状态
-    // (这需要你在 network_client.c 里已经实现了 net_send_logout)
     net_send_logout();
-    
-    // 2. 界面跳转：切回登录页面
-    // 参数说明: 目标屏幕, 动画方式(向右滑出), 动画时间500ms, 延迟0ms, 初始化函数
     _ui_screen_change(&ui_ScreenLogin, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLogin_screen_init);
 }
+
+// 刷新房间列表 (已自动适配 JSON)
 void OnRefreshClicked(lv_event_t * e) {
-    net_send_get_room_list(); // 发送请求
+    net_send_get_room_list(); 
 }
 
-// 创建房间按钮被点击
+// 创建房间 (已自动适配 JSON)
 void OnCreateRoomClicked(lv_event_t * e) {
-    net_send_create_room();   // 发送请求
+    net_send_create_room();   
 }
 
-// 对应你在 SLS 里给按钮设置的 Clicked 事件函数名
-// Client/ui_events.c
-
-// Client/ui_events.c
-
+// 离开房间 (已自动适配 JSON)
 void OnLeaveRoomClicked(lv_event_t * e)
 {
     printf("[UI] 玩家点击了离开房间按钮\n");
     net_send_leave_room();
 
-    // ★★★ 这里的修改：增加杀定时器逻辑 ★★★
+    // 杀掉定时器逻辑
     if (game_reset_timer) {
         lv_timer_del(game_reset_timer);
         game_reset_timer = NULL;
     }
 
-    // (下面的清理代码保持不变)
     if (ui_BoardContainer) board_view_clear(ui_BoardContainer);
     if (ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
     if (ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
@@ -88,34 +82,33 @@ void OnLeaveRoomClicked(lv_event_t * e)
     is_player_ready = false;
     if (ui_Labelreadybtninfo) lv_label_set_text(ui_Labelreadybtninfo, "Ready");
     if (ui_Button5) lv_obj_clear_flag(ui_Button5, LV_OBJ_FLAG_HIDDEN);
-
-    // 如果你想自动跳回大厅，取消下面这行的注释
-    // _ui_screen_change(&ui_ScreenLobby, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ScreenLobby_screen_init);
 }
 
+// ★★★ 核心修改：这里必须把 send_raw 改成 JSON 发送函数 ★★★
 void OnReadyClicked(lv_event_t * e) {
     if (!is_player_ready) {
-        // --- 动作：准备 ---
-        uint8_t cmd = CMD_READY;
-        send_raw(&cmd, 1);
+        // --- 动作：准备 (发送 JSON) ---
+        // 旧代码: uint8_t cmd = CMD_READY; send_raw(&cmd, 1);
+        
+        // 新代码:
+        net_send_ready_action(true); 
         
         // 更新 UI
         lv_label_set_text(ui_Labelreadybtninfo, "I'm Ready");
-        // 如果想改按钮颜色，也可以在这里改
-        // lv_obj_set_style_bg_color(ui_BtnReady, lv_palette_main(LV_PALETTE_GREEN), 0);
-        
         is_player_ready = true;
     } else {
-        // --- 动作：取消准备 ---
-        uint8_t cmd = CMD_CANCEL_READY;
-        send_raw(&cmd, 1);
+        // --- 动作：取消准备 (发送 JSON) ---
+        // 旧代码: uint8_t cmd = CMD_CANCEL_READY; send_raw(&cmd, 1);
+        
+        // 新代码:
+        net_send_ready_action(false);
         
         // 更新 UI
         lv_label_set_text(ui_Labelreadybtninfo, "Not Ready");
-        
         is_player_ready = false;
     }
 }
+
 void Texture_clean(lv_event_t * e)
 {
 	lv_textarea_set_text(ui_InputUser, "");
