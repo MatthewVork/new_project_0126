@@ -13,6 +13,11 @@
 #include "game/game_config.h"
 #include "game/board_view.h"
 
+// --- 声明外部函数 (防止编译器警告) ---
+// 因为我们修改了 network_client.c 但没改 header，这里手动声明一下
+extern int net_recv_packet(char* out_buffer, int max_len);
+extern void net_send_place_stone_json(int x, int y, int color);
+
 // --- 全局变量 ---
 extern bool is_player_ready;
 int my_game_color = -1;     
@@ -25,12 +30,11 @@ char p2_name_cache[32] = "";
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 480
 
-// ★★★ 1. 本地棋盘缓存 (防止重复点击和越界) ★★★
+// 本地棋盘缓存 (防止重复点击和越界)
 int local_board[19][19] = {0};
 
 void hide_all_popups();
 void timer_reset_game(lv_timer_t * timer); 
-extern void net_send_place_stone_json(int x, int y, int color);
 
 // --- 辅助函数 ---
 void clear_local_board() {
@@ -128,6 +132,7 @@ void hide_all_popups() {
     if(ui_PanelRegRepeat)    lv_obj_add_flag(ui_PanelRegRepeat, LV_OBJ_FLAG_HIDDEN);
 }
 
+// --- 业务逻辑处理 ---
 void process_one_json(cJSON *json) {
     if (!json) return;
     cJSON *cmdItem = cJSON_GetObjectItem(json, KEY_CMD);
@@ -139,6 +144,7 @@ void process_one_json(cJSON *json) {
         cJSON *msgItem = cJSON_GetObjectItem(json, KEY_MESSAGE);
         int success = succItem ? succItem->valueint : 0;
         char *msg = msgItem ? msgItem->valuestring : "";
+        
         if (lv_scr_act() == ui_ScreenRegister) {
             hide_all_popups(); 
             if (success) {
@@ -281,6 +287,7 @@ void process_one_json(cJSON *json) {
             int x = xItem->valueint;
             int y = yItem->valueint;
             int color = cItem->valueint;
+            
             // 更新本地数组和 UI
             if(x >=0 && x < 19 && y >= 0 && y < 19) {
                 local_board[x][y] = color + 1; 
@@ -317,6 +324,7 @@ int main(void)
     lv_init();
     sdl_init();
 
+    // 驱动初始化
     static lv_disp_draw_buf_t disp_buf;
     static lv_color_t buf[WINDOW_WIDTH * WINDOW_HEIGHT / 10];
     lv_disp_draw_buf_init(&disp_buf, buf, NULL, WINDOW_WIDTH * WINDOW_HEIGHT / 10);
@@ -357,71 +365,33 @@ int main(void)
     if(ui_ImgTurnP1) lv_obj_add_flag(ui_ImgTurnP1, LV_OBJ_FLAG_HIDDEN);
     if(ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
 
-    // ★ 请确认IP ★
+    // ★★★ 请务必确认这里的 IP 地址！★★★
+    // 如果是本地测试，用 "127.0.0.1"
+    // 如果是两台电脑，用服务器的局域网 IP
     if (net_init("172.24.139.145", 8888) != 0) {
         printf("Connect failed\n");
         return -1;
     }
 
-    // ★★★ 核心修复：客户端蓄水池逻辑 ★★★
-    static uint8_t rx_buffer[10240]; 
-    static int rx_len = 0; 
-
+    // ★★★ 主循环：超级简单的接收逻辑 ★★★
+    // 只有当 net_recv_packet 读到一个完整包时，才会进来
+    // 再也不会有“半个包”的问题了
+    char temp_buf[4096];
+    
     while(1) {
         lv_timer_handler(); 
         
-        uint8_t temp_buf[1024];
-        int n = net_poll(temp_buf); // 非阻塞读
-        
-        if (n > 0) {
-            // 防止缓冲区溢出
-            if (rx_len + n >= 10240) {
-                printf("[Client] Buffer Overflow! Reset.\n");
-                rx_len = 0; 
-            }
-            
-            // 1. 拼接数据到末尾
-            memcpy(rx_buffer + rx_len, temp_buf, n);
-            rx_len += n;
-            rx_buffer[rx_len] = '\0'; 
-            
-            // 2. 循环解析缓冲区里的所有完整包
-            int parse_offset = 0;
-            while (parse_offset < rx_len) {
-                // 找 '{'
-                char *start_ptr = strchr((char*)rx_buffer + parse_offset, '{');
-                if (!start_ptr) break; // 没找到，剩下的可能是乱码或不完整
-                
-                // 更新偏移量到 JSON 开始处
-                parse_offset = (uint8_t*)start_ptr - rx_buffer;
-
-                const char *end_ptr = NULL;
-                cJSON *json = cJSON_ParseWithOpts(start_ptr, &end_ptr, 0);
-                
-                if (json) {
-                    process_one_json(json);
-                    cJSON_Delete(json);
-                    
-                    // 更新偏移量到 JSON 结尾
-                    parse_offset = (uint8_t*)end_ptr - rx_buffer;
-                } else {
-                    // 解析失败（数据不完整），保留当前位置，等待下一次拼接
-                    break;
-                }
-            }
-
-            // 3. 内存搬运：把没处理完的数据移到最前面
-            if (parse_offset > 0) {
-                int remaining = rx_len - parse_offset;
-                if (remaining > 0) {
-                    memmove(rx_buffer, rx_buffer + parse_offset, remaining);
-                }
-                rx_len = remaining;
-                memset(rx_buffer + rx_len, 0, 10240 - rx_len);
+        // 尝试接收一个完整包 (非阻塞检查 + 阻塞读体)
+        if (net_recv_packet(temp_buf, 4096)) {
+            // 成功读到了一个完整 JSON！
+            cJSON *json = cJSON_Parse(temp_buf);
+            if (json) {
+                process_one_json(json);
+                cJSON_Delete(json);
             }
         }
 
-        usleep(5000); 
+        usleep(5000); // 5ms 休息，避免 CPU 100%
         lv_tick_inc(5);
     }
     return 0;
