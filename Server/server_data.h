@@ -30,12 +30,11 @@ typedef struct {
     int status; // 0=Wait, 2=Playing
     
     // 玩家位置
-    int white_player_idx;   
-    int black_player_idx;
+    int white_player_idx;   // 玩家索引 (-1表示无玩家，1代表白方，0代表黑方)
+    int black_player_idx;   
     int white_ready;
     int black_ready;
 
-    // ★★★ 建议修改这里 ★★★
     // 0:空, 1:黑(BLACK), 2:白(WHITE) —— 这样 memset(0) 就是清空
     int board[19][19];   
     
