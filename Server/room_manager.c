@@ -6,7 +6,6 @@
 #include "../Common/game_protocol.h"
 #include "../Common/cJSON.h" 
 
-// 前置声明
 void broadcast_room_info(int room_id);
 
 void init_rooms() {
@@ -24,7 +23,6 @@ void init_rooms() {
     printf("[System] 房间系统初始化完成\n");
 }
 
-// 广播房间信息
 void broadcast_room_info(int room_id) {
     if (room_id < 0 || room_id >= MAX_ROOMS) return;
     Room *r = &rooms[room_id];
@@ -59,7 +57,6 @@ void broadcast_room_info(int room_id) {
     cJSON_Delete(root); 
 }
 
-// 广播游戏开始
 void broadcast_game_start(int room_id) {
     Room *r = &rooms[room_id];
     memset(r->board, -1, sizeof(r->board)); 
@@ -193,10 +190,10 @@ int check_win(int rid, int x, int y, int player_color) {
     return 0;
 }
 
-// 8. 处理落子逻辑 (已修复变量 r 未定义错误)
 void handle_place_stone(int rid, int player_idx, int x, int y) {
     if (rid < 0 || rid >= MAX_ROOMS) return;
 
+    // ★ 核心修复：防止坐标越界导致崩溃
     if (x < 0 || x >= 19 || y < 0 || y >= 19) {
         printf("[Server] 坐标越界(%d,%d)，忽略\n", x, y);
         return;
@@ -240,7 +237,6 @@ void handle_place_stone(int rid, int player_idx, int x, int y) {
         cJSON_Delete(over);
 
         usleep(50000);
-        // ★★★ 修复点：将 r-> 替换为 rooms[rid]. ★★★
         rooms[rid].status = 0; 
         rooms[rid].black_ready = 0; 
         rooms[rid].white_ready = 0;

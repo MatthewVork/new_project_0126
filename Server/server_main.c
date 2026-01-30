@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
+#include <signal.h> // ★ 新增
 
 #include "server_data.h"
 #include "../Common/game_protocol.h"
@@ -18,7 +19,6 @@ void init_server_data() {
     init_rooms();
 }
 
-// 辅助发送函数
 void send_json_result(int fd, const char* cmd, int success, const char* msg) {
     cJSON *root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, KEY_CMD, cmd);
@@ -26,13 +26,17 @@ void send_json_result(int fd, const char* cmd, int success, const char* msg) {
     cJSON_AddStringToObject(root, KEY_MESSAGE, msg);
     char *str = cJSON_PrintUnformatted(root);
     if(str) {
-        send(fd, str, strlen(str), 0);
+        #ifdef MSG_NOSIGNAL
+            send(fd, str, strlen(str), MSG_NOSIGNAL);
+        #else
+            send(fd, str, strlen(str), 0);
+        #endif
         free(str);
     }
     cJSON_Delete(root);
 }
 
-// ★★★ 核心修复：处理单个 JSON 的业务逻辑 ★★★
+// 业务逻辑处理
 void process_server_json(int client_idx, cJSON *json) {
     int sd = players[client_idx].socket_fd;
     cJSON *cmdItem = cJSON_GetObjectItem(json, KEY_CMD);
@@ -50,7 +54,7 @@ void process_server_json(int client_idx, cJSON *json) {
                 players[client_idx].state = STATE_LOBBY;
                 strncpy(players[client_idx].username, uItem->valuestring, 31);
                 send_json_result(sd, CMD_STR_AUTH_RESULT, 1, "Login OK");
-                printf("用户 %s 登录成功\n", players[client_idx].username);
+                printf("User %s Logged in\n", players[client_idx].username);
             } else if (status == -1) {
                 send_json_result(sd, CMD_STR_AUTH_RESULT, 0, "Already Logged In");
             } else {
@@ -123,7 +127,7 @@ void process_server_json(int client_idx, cJSON *json) {
             }
         }
     }
-    // 6. 离开房间
+    // 6. 离开
     else if (strcmp(cmd, CMD_STR_LEAVE_ROOM) == 0) {
         int rid = players[client_idx].current_room_id;
         if (rid != -1) {
@@ -134,7 +138,7 @@ void process_server_json(int client_idx, cJSON *json) {
             }
         }
     }
-    // 7. 获取列表
+    // 7. 列表
     else if (strcmp(cmd, CMD_STR_GET_ROOM_LIST) == 0) {
         cJSON *res = cJSON_CreateObject();
         cJSON_AddStringToObject(res, KEY_CMD, CMD_STR_ROOM_LIST_RES);
@@ -172,24 +176,23 @@ void process_server_json(int client_idx, cJSON *json) {
             }
         }
     }
-    // 9. 落子 (重点修复：安全检查)
+    // 9. 落子
     else if (strcmp(cmd, CMD_STR_PLACE_STONE) == 0) {
         int rid = players[client_idx].current_room_id;
         if (rid != -1) {
             cJSON *xItem = cJSON_GetObjectItem(json, KEY_X);
             cJSON *yItem = cJSON_GetObjectItem(json, KEY_Y);
-            
-            // ★★★ 安全检查：防止空指针崩溃 ★★★
             if (xItem && yItem) {
                 handle_place_stone(rid, client_idx, xItem->valueint, yItem->valueint);
-            } else {
-                printf("[Server] 收到非法落子包(缺坐标)，忽略\n");
             }
         }
     }
 }
 
 int main() {
+    // ★ 修复：忽略 SIGPIPE，防止客户端断开导致服务器崩
+    signal(SIGPIPE, SIG_IGN);
+
     int server_fd, new_socket, max_sd, activity, valread;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
@@ -235,26 +238,25 @@ int main() {
                 // 安全读取
                 valread = read(sd, buffer, 1023);
 
-                if (valread == 0) {
+                // ★★★ 致命错误修复：必须判断 <= 0，不仅仅是 == 0 ★★★
+                // 如果 valread 是 -1 (比如连接重置)，之前的代码会写 buffer[-1] 导致崩溃
+                if (valread <= 0) {
                     close(sd);
                     handle_disconnect(i);
                 } else {
                     buffer[valread] = '\0'; 
 
-                    // ★★★ 核心修复：服务器端也支持粘包处理 ★★★
                     char *parse_ptr = (char*)buffer;
                     while (*parse_ptr == '{') {
                         const char *end_ptr = NULL;
                         cJSON *json = cJSON_ParseWithOpts(parse_ptr, &end_ptr, 0);
                         if (json) {
                             process_server_json(i, json);
-                            cJSON_Delete(json); // 必须释放
-                            
-                            // 移动指针到下一个 JSON
+                            cJSON_Delete(json);
                             parse_ptr = (char*)end_ptr;
                             while (*parse_ptr && *parse_ptr != '{') parse_ptr++;
                         } else {
-                            break; // 解析失败，停止
+                            break;
                         }
                     }
                 }
