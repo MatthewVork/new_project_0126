@@ -4,49 +4,64 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <sys/select.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <pthread.h> // ★ 新增：线程库
 
 #include "server_data.h"
 #include "../Common/game_protocol.h"
 #include "../Common/cJSON.h" 
 
+// --- 全局数据 ---
 Player players[MAX_CLIENTS];
 Room rooms[MAX_ROOMS];
 
-// 定义每个客户端的接收缓冲区（蓄水池）
-static uint8_t client_buffers[MAX_CLIENTS][4096];
-static int client_buffer_len[MAX_CLIENTS] = {0};
+// ★ 新增：互斥锁，用于保护 players 和 rooms 数组
+pthread_mutex_t g_logic_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void init_server_data() {
     memset(players, 0, sizeof(players));
-    memset(client_buffers, 0, sizeof(client_buffers));
-    memset(client_buffer_len, 0, sizeof(client_buffer_len));
     init_rooms();
 }
 
+// 发送辅助函数
 void send_json_result(int fd, const char* cmd, int success, const char* msg) {
+    if (fd <= 0) return;
     cJSON *root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, KEY_CMD, cmd);
     cJSON_AddNumberToObject(root, KEY_SUCCESS, success);
     cJSON_AddStringToObject(root, KEY_MESSAGE, msg);
     char *str = cJSON_PrintUnformatted(root);
     if(str) {
-        // 纯文本发送，不加头
-        send(fd, str, strlen(str), 0);
+        send(fd, str, strlen(str), 0); // 在多线程中，对不同socket的send是安全的
         free(str);
     }
     cJSON_Delete(root);
 }
 
-// 业务逻辑分发
+// --- 业务逻辑分发 (核心修改：加锁) ---
+// 这个函数现在运行在子线程中，所以操作全局数据(players/rooms)必须加锁
 void process_server_json(int client_idx, cJSON *json) {
+    
+    // ★★★ 上锁：进入临界区 ★★★
+    pthread_mutex_lock(&g_logic_mutex);
+
+    // 再次检查 socket 是否有效 (防止在等待锁的时候连接断开了)
+    if (players[client_idx].socket_fd <= 0) {
+        pthread_mutex_unlock(&g_logic_mutex);
+        return;
+    }
+
     int sd = players[client_idx].socket_fd;
     cJSON *cmdItem = cJSON_GetObjectItem(json, KEY_CMD);
-    if (!cmdItem || !cJSON_IsString(cmdItem)) return;
+    if (!cmdItem || !cJSON_IsString(cmdItem)) {
+        pthread_mutex_unlock(&g_logic_mutex);
+        return;
+    }
     char *cmd = cmdItem->valuestring;
+
+    // --- 以下逻辑保持原样，没有任何修改 ---
 
     if (strcmp(cmd, CMD_STR_LOGIN) == 0) {
         cJSON *u = cJSON_GetObjectItem(json, KEY_USERNAME);
@@ -57,7 +72,7 @@ void process_server_json(int client_idx, cJSON *json) {
                 players[client_idx].state = STATE_LOBBY;
                 strncpy(players[client_idx].username, u->valuestring, 31);
                 send_json_result(sd, CMD_STR_AUTH_RESULT, 1, "Login OK");
-                printf("User %s Logged in\n", players[client_idx].username);
+                printf("[Thread] User %s Logged in (Index: %d)\n", players[client_idx].username, client_idx);
             } else if (status == -1) send_json_result(sd, CMD_STR_AUTH_RESULT, 0, "Already Logged In");
             else send_json_result(sd, CMD_STR_AUTH_RESULT, 0, "Wrong Password/User");
         }
@@ -157,15 +172,86 @@ void process_server_json(int client_idx, cJSON *json) {
             if (x && y) handle_place_stone(rid, client_idx, x->valueint, y->valueint);
         }
     }
+
+    // ★★★ 解锁：离开临界区 ★★★
+    pthread_mutex_unlock(&g_logic_mutex);
+}
+
+// --- ★★★ 核心修改：客户端线程函数 ★★★ ---
+void *client_thread_handler(void *arg) {
+    int client_idx = *(int*)arg;
+    free(arg); // 释放主线程传来的参数内存
+    
+    int sd = players[client_idx].socket_fd;
+    
+    // ★ 局部化：每个线程有自己独立的接收缓冲区，不再使用全局 client_buffers
+    // 这样彻底避免了 I/O 冲突
+    uint8_t rx_buffer[4096];
+    int rx_len = 0;
+
+    printf("[Thread] Client handler started for index %d\n", client_idx);
+
+    while (1) {
+        int remain_size = 4096 - rx_len - 1;
+        if (remain_size <= 0) { rx_len = 0; remain_size = 4095; } // 溢出保护
+
+        // ★ 阻塞式读取：没有数据线程就挂起睡觉，不占 CPU
+        int valread = read(sd, rx_buffer + rx_len, remain_size);
+
+        if (valread <= 0) {
+            // 断开连接处理
+            printf("[Thread] Client %d disconnected\n", client_idx);
+            
+            // 操作全局 players 数组，加锁
+            pthread_mutex_lock(&g_logic_mutex);
+            close(sd);
+            handle_disconnect(client_idx);
+            players[client_idx].socket_fd = 0; // 释放位置
+            pthread_mutex_unlock(&g_logic_mutex);
+            
+            break; // 跳出循环，结束线程
+        } else {
+            rx_len += valread;
+            rx_buffer[rx_len] = '\0';
+
+            // ★ 蓄水池解析逻辑 (逻辑同原版，只是变量名变了)
+            int parse_offset = 0;
+            while (parse_offset < rx_len) {
+                char *start_ptr = strchr((char*)rx_buffer + parse_offset, '{');
+                if (!start_ptr) break;
+                
+                parse_offset = (uint8_t*)start_ptr - rx_buffer;
+                const char *end_ptr = NULL;
+                cJSON *json = cJSON_ParseWithOpts(start_ptr, &end_ptr, 0);
+                
+                if (json) {
+                    // 调用业务逻辑 (里面会自动加锁)
+                    process_server_json(client_idx, json);
+                    cJSON_Delete(json);
+                    parse_offset = (uint8_t*)end_ptr - rx_buffer;
+                } else {
+                    break;
+                }
+            }
+
+            // 内存搬运
+            if (parse_offset > 0) {
+                int remaining = rx_len - parse_offset;
+                if (remaining > 0) memmove(rx_buffer, rx_buffer + parse_offset, remaining);
+                rx_len = remaining;
+            }
+        }
+    }
+
+    return NULL;
 }
 
 int main() {
     signal(SIGPIPE, SIG_IGN); 
 
-    int server_fd, new_socket, max_sd, activity, valread;
+    int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-    fd_set readfds;
 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) { exit(EXIT_FAILURE); }
     int opt = 1;
@@ -173,85 +259,53 @@ int main() {
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(SERVER_PORT);
-    bind(server_fd, (struct sockaddr *)&address, sizeof(address));
+    
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("Bind failed");
+        exit(EXIT_FAILURE);
+    }
     listen(server_fd, 10);
     init_server_data();
-    printf("=== 围棋服务器启动 (Port: %d) ===\n", SERVER_PORT);
+    printf("=== 围棋服务器 (Multi-Threaded) 启动 Port: %d ===\n", SERVER_PORT);
 
+    // --- ★★★ 核心修改：主线程只负责 Accept ★★★ ---
     while(1) {
-        FD_ZERO(&readfds);
-        FD_SET(server_fd, &readfds);
-        max_sd = server_fd;
-        for (int i = 0; i < MAX_CLIENTS; i++) {
-            if(players[i].socket_fd > 0) FD_SET(players[i].socket_fd, &readfds);
-            if(players[i].socket_fd > max_sd) max_sd = players[i].socket_fd;
-        }
-        activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
+        // 1. 阻塞等待新连接
+        new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+        if (new_socket < 0) continue;
 
-        if (FD_ISSET(server_fd, &readfds)) {
-            new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
-            if (new_socket > 0) {
-                printf("新连接: %s, Socket %d\n", inet_ntoa(address.sin_addr), new_socket);
-                for (int i = 0; i < MAX_CLIENTS; i++) {
-                    if(players[i].socket_fd == 0) {
-                        players[i].socket_fd = new_socket;
-                        players[i].state = STATE_CONNECTED;
-                        client_buffer_len[i] = 0;
-                        memset(client_buffers[i], 0, 4096);
-                        break;
-                    }
-                }
+        printf("[Main] New Connection: %s, Socket %d\n", inet_ntoa(address.sin_addr), new_socket);
+
+        // 2. 找一个空闲位置 (操作 players 数组需加锁)
+        pthread_mutex_lock(&g_logic_mutex);
+        int free_idx = -1;
+        for (int i = 0; i < MAX_CLIENTS; i++) {
+            if(players[i].socket_fd == 0) {
+                players[i].socket_fd = new_socket;
+                players[i].state = STATE_CONNECTED;
+                free_idx = i;
+                break;
             }
         }
+        pthread_mutex_unlock(&g_logic_mutex);
 
-        for (int i = 0; i < MAX_CLIENTS; i++) {
-            int sd = players[i].socket_fd;
-            if (FD_ISSET(sd, &readfds)) {
-                int remain_size = 4096 - client_buffer_len[i] - 1;
-                if (remain_size <= 0) { 
-                    client_buffer_len[i] = 0; 
-                    remain_size = 4095;
-                }
-
-                valread = read(sd, client_buffers[i] + client_buffer_len[i], remain_size);
-
-                if (valread <= 0) {
-                    close(sd);
-                    handle_disconnect(i);
-                    client_buffer_len[i] = 0;
-                } else {
-                    client_buffer_len[i] += valread;
-                    client_buffers[i][client_buffer_len[i]] = '\0'; 
-
-                    // 蓄水池解析逻辑
-                    int parse_offset = 0;
-                    while (parse_offset < client_buffer_len[i]) {
-                        char *start_ptr = strchr((char*)client_buffers[i] + parse_offset, '{');
-                        if (!start_ptr) break; 
-                        
-                        parse_offset = (uint8_t*)start_ptr - client_buffers[i];
-                        const char *end_ptr = NULL;
-                        cJSON *json = cJSON_ParseWithOpts(start_ptr, &end_ptr, 0);
-                        
-                        if (json) {
-                            process_server_json(i, json);
-                            cJSON_Delete(json);
-                            parse_offset = (uint8_t*)end_ptr - client_buffers[i];
-                        } else {
-                            break;
-                        }
-                    }
-
-                    if (parse_offset > 0) {
-                        int remaining = client_buffer_len[i] - parse_offset;
-                        if (remaining > 0) {
-                            memmove(client_buffers[i], client_buffers[i] + parse_offset, remaining);
-                        }
-                        client_buffer_len[i] = remaining;
-                        memset(client_buffers[i] + client_buffer_len[i], 0, 4096 - client_buffer_len[i]);
-                    }
-                }
+        if (free_idx != -1) {
+            // 3. 创建新线程专门服务这个客户端
+            pthread_t tid;
+            int *arg = malloc(sizeof(int)); // 动态分配参数，防止多线程竞争
+            *arg = free_idx;
+            
+            if (pthread_create(&tid, NULL, client_thread_handler, arg) != 0) {
+                printf("Failed to create thread\n");
+                close(new_socket);
+                free(arg);
+            } else {
+                // 线程分离，线程结束后自动回收资源，不需要主线程 join
+                pthread_detach(tid);
             }
+        } else {
+            printf("Server Full, closing connection\n");
+            close(new_socket);
         }
     }
     return 0;

@@ -389,7 +389,7 @@ int main(void)
     if(ui_ImgTurnP2) lv_obj_add_flag(ui_ImgTurnP2, LV_OBJ_FLAG_HIDDEN);
 
     // ★ 请确认IP ★
-    if (net_init("172.24.139.145", 8888) != 0) {
+    if (net_init("172.28.17.136", 8888) != 0) {
         printf("Connect failed\n");
         return -1;
     }
