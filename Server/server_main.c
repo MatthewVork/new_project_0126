@@ -7,20 +7,21 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <pthread.h> // ★ 新增：线程库
+#include <pthread.h>
 
 #include "server_data.h"
 #include "../Common/game_protocol.h"
 #include "../Common/cJSON.h" 
 
 // --- 全局数据 ---
-Player players[MAX_CLIENTS];
-Room rooms[MAX_ROOMS];
+Player players[MAX_CLIENTS];    // 全局数组：存放所有在线玩家信息
+Room rooms[MAX_ROOMS];      // 全局数组：存放所有房间信息
 
-// ★ 新增：互斥锁，用于保护 players 和 rooms 数组
+// 互斥锁，用于保护 players 和 rooms 数组
 pthread_mutex_t g_logic_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void init_server_data() {
+void init_server_data()     //初始化在线玩家和房间数据
+{
     memset(players, 0, sizeof(players));
     init_rooms();
 }
@@ -40,7 +41,7 @@ void send_json_result(int fd, const char* cmd, int success, const char* msg) {
     cJSON_Delete(root);
 }
 
-// --- 业务逻辑分发 (核心修改：加锁) ---
+// --- 业务逻辑分发 ---
 // 这个函数现在运行在子线程中，所以操作全局数据(players/rooms)必须加锁
 void process_server_json(int client_idx, cJSON *json) {
     
@@ -247,37 +248,46 @@ void *client_thread_handler(void *arg) {
 }
 
 int main() {
-    signal(SIGPIPE, SIG_IGN); 
+    signal(SIGPIPE, SIG_IGN);   //忽略 SIGPIPE 信号，防止往已关闭的 socket 写数据导致程序崩溃
 
     int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) { exit(EXIT_FAILURE); }
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) { exit(EXIT_FAILURE); } //若创建失败，则返回报错
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(SERVER_PORT);
+
+    address.sin_family = AF_INET;   //IPv4
+    address.sin_addr.s_addr = INADDR_ANY;   //监听所有网卡地址
+    address.sin_port = htons(SERVER_PORT);  //绑定端口
     
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {    //绑定端口失败，则报错退出
         perror("Bind failed");
         exit(EXIT_FAILURE);
     }
-    listen(server_fd, 10);
-    init_server_data();
+    listen(server_fd, 10);  //监听，最大等待队列10
+    init_server_data(); // 初始化在线玩家和房间数据
     printf("=== 围棋服务器 (Multi-Threaded) 启动 Port: %d ===\n", SERVER_PORT);
 
     // --- ★★★ 核心修改：主线程只负责 Accept ★★★ ---
     while(1) {
-        // 1. 阻塞等待新连接
+        // 1. 阻塞等待新连接，直到新客户端连接进来
         new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
         if (new_socket < 0) continue;
+
+        /*
+        int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+        sockfd：监听套接字描述符
+        addr：指向 sockaddr_in 结构体的指针，用于存储客户端地址
+        addrlen：指向地址长度的指针，初始值为 sizeof(sockaddr_in)，调用后会更新为实际地址长度
+        返回值：成功时返回新创建的套接字描述符，失败时返回
+        */
 
         printf("[Main] New Connection: %s, Socket %d\n", inet_ntoa(address.sin_addr), new_socket);
 
         // 2. 找一个空闲位置 (操作 players 数组需加锁)
-        pthread_mutex_lock(&g_logic_mutex);
+        pthread_mutex_lock(&g_logic_mutex); // 上锁
         int free_idx = -1;
         for (int i = 0; i < MAX_CLIENTS; i++) {
             if(players[i].socket_fd == 0) {
