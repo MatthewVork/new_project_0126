@@ -180,42 +180,49 @@ void process_server_json(int client_idx, cJSON *json) {
 
 // --- ★★★ 核心修改：客户端线程函数 ★★★ ---
 void *client_thread_handler(void *arg) {
-    int client_idx = *(int*)arg;
-    free(arg); // 释放主线程传来的参数内存
+    int client_idx = *(int*)arg; free(arg); // 释放主线程传来的参数内存
+    int sd = players[client_idx].socket_fd; // 获取该客户对应的 Socket 句柄 (用于收发数据)
     
-    int sd = players[client_idx].socket_fd;
-    
-    // ★ 局部化：每个线程有自己独立的接收缓冲区，不再使用全局 client_buffers
-    // 这样彻底避免了 I/O 冲突
-    uint8_t rx_buffer[4096];
-    int rx_len = 0;
+    uint8_t rx_buffer[4096];    //每个线程独立的接收缓冲区
+    int rx_len = 0;             //缓冲区内已有数据长度
 
     printf("[Thread] Client handler started for index %d\n", client_idx);
 
     while (1) {
+        // 计算缓冲区还剩多少空间，防止溢出
         int remain_size = 4096 - rx_len - 1;
-        if (remain_size <= 0) { rx_len = 0; remain_size = 4095; } // 溢出保护
+        if (remain_size <= 0) { rx_len = 0; remain_size = 4095; } // 溢出保护，满了就清空
 
         // ★ 阻塞式读取：没有数据线程就挂起睡觉，不占 CPU
         int valread = read(sd, rx_buffer + rx_len, remain_size);
 
-        if (valread <= 0) {
+        /*
+        sd：要读取数据的 socket 描述符
+        rx_buffer + rx_len：指向接收缓冲区中可用空间的指针
+        remain_size：指定最多读取的字节数，防止缓冲区溢出
+        返回值：实际读取的字节数，若返回0表示连接已关闭，返回-1表示出错
+        */
+
+        if (valread <= 0) 
+        {
             // 断开连接处理
             printf("[Thread] Client %d disconnected\n", client_idx);
             
             // 操作全局 players 数组，加锁
             pthread_mutex_lock(&g_logic_mutex);
-            close(sd);
+            close(sd);  //关闭 socket
             handle_disconnect(client_idx);
             players[client_idx].socket_fd = 0; // 释放位置
             pthread_mutex_unlock(&g_logic_mutex);
             
             break; // 跳出循环，结束线程
-        } else {
+        } 
+        else 
+        {
             rx_len += valread;
             rx_buffer[rx_len] = '\0';
 
-            // ★ 蓄水池解析逻辑 (逻辑同原版，只是变量名变了)
+            // ★ 蓄水池解析逻辑
             int parse_offset = 0;
             while (parse_offset < rx_len) {
                 char *start_ptr = strchr((char*)rx_buffer + parse_offset, '{');
@@ -223,6 +230,12 @@ void *client_thread_handler(void *arg) {
                 
                 parse_offset = (uint8_t*)start_ptr - rx_buffer;
                 const char *end_ptr = NULL;
+
+                // cJSON_ParseWithOpts：
+                // 1. 它从 start_ptr 开始解析。
+                // 2. 它会自动匹配 '{' 和 '}'。
+                // 3. 如果解析成功，它会把 end_ptr 指向这个 JSON 最后一个字符的后面。
+                // 4. 如果数据不全（比如只有 "{"cmd": ），它会解析失败，返回 NULL。
                 cJSON *json = cJSON_ParseWithOpts(start_ptr, &end_ptr, 0);
                 
                 if (json) {
@@ -299,21 +312,34 @@ int main() {
         }
         pthread_mutex_unlock(&g_logic_mutex);
 
-        if (free_idx != -1) {
+        if (free_idx != -1) 
+        {
             // 3. 创建新线程专门服务这个客户端
             pthread_t tid;
-            int *arg = malloc(sizeof(int)); // 动态分配参数，防止多线程竞争
+            int *arg = malloc(sizeof(int)); // 专门为线程分配内存
             *arg = free_idx;
+
+            //因为free_idx是主线程的变量，内容会实时变化，所以要分配一个新内存给子线程使用
             
+            //尝试启动一个新线程
             if (pthread_create(&tid, NULL, client_thread_handler, arg) != 0) {
+                
+                /*
+                &tid：如果创建成功，系统会把新线程的 ID 写在这里
+                NULL：线程属性，NULL 表示默认属性
+                client_thread_handler：线程函数指针，线程启动后会执行这个函数
+                arg：传递给线程函数的参数，这里传递的是客户端在 players 数组中的索引
+                返回值：成功返回 0，失败返回错误码
+                */
+
                 printf("Failed to create thread\n");
                 close(new_socket);
                 free(arg);
-            } else {
-                // 线程分离，线程结束后自动回收资源，不需要主线程 join
-                pthread_detach(tid);
-            }
-        } else {
+            
+            } else pthread_detach(tid);    // 线程分离，线程结束后自动回收资源，不需要主线程 join
+        } 
+        else 
+        {
             printf("Server Full, closing connection\n");
             close(new_socket);
         }
